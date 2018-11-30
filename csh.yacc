@@ -45,8 +45,7 @@ int main() {
 
 %token NUMBER WORD NEWLINE SEMICOLON
 %token EQUALS GREAT LESS GREAT_GREAT GREAT_AMP
-%token LS CD EXIT SET PWD ECHO
-
+%token CD EXIT SET
 %token REDIRECT PIPE
 
 %union {
@@ -57,7 +56,6 @@ int main() {
 %type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
 %type <str> COMMAND COMMANDS EXPR
 %type <str> PIPE_LIST CMD_ARGS COMMAND_LIST
-
 
 %%
 
@@ -77,6 +75,7 @@ EXPR:
 PIPE_LIST:
     PIPE_LIST PIPE CMD_ARGS
     | CMD_ARGS
+
 
 COMMAND_LIST:
     COMMANDS{
@@ -112,8 +111,9 @@ COMMAND:
     WORD {
         command.current_command = $1;
         command.redirect.redirect = NULL;
+        command.redirect.from = NULL;
+        command.redirect.to = NULL;
     }
-
 
 ARGS:
     ARGS WORD {

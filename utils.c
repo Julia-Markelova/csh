@@ -31,11 +31,15 @@ void exec_(command_t command, char * args[]){
         // we are the child
         if(command.redirect.redirect != NULL){
             int append = 0;
+            char * redir = command.redirect.redirect;
 
-            if (strcmp(command.redirect.redirect, ">>") == 0)
+            if (strcmp(redir, ">>") == 0)
                 append = 1;
 
-            redirect(command.redirect.from, command.redirect.to, append);
+            if (strcmp(redir, "<") == 0)
+                redirect(command.redirect.to, command.redirect.from, 0);
+            else
+                redirect(command.redirect.from, command.redirect.to, append);
         }
         execvp(command.current_command, args);
         perror(command.current_command);
@@ -60,23 +64,23 @@ int redirect(char* from, char * to, int append){
     int in;
     int out;
 
-    // check if there any file as stdout
+    // checkcat  if there any file as stdout
     if (from)
         in = open(from, O_RDONLY);
     else
-        in = 1;
+        in = 0;
 
     // check if there any file as stdin
     if (to) {
         mode_t mode =  S_IRWXU | S_IRGRP | S_IROTH;
         // check for append flag
         if (append == 1)
-            out = open(to, O_WRONLY | O_APPEND | O_CREAT, mode);
+            out = open(to, O_RDWR | O_APPEND | O_CREAT, mode);
         else
-            out = open(to, O_WRONLY | O_TRUNC | O_CREAT, mode);
+            out = open(to, O_RDWR | O_TRUNC | O_CREAT, mode);
     }
     else
-        out = 0;
+        out = 1;
 
     if (in < 0 || out < 0) {
         perror("open");
