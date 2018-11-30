@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <wait.h>
+#include "utils.h"
 
 
 void print_msg(int fd, char * msg){
@@ -15,7 +16,7 @@ void print_msg(int fd, char * msg){
         perror("write");
 }
 
-void exec_(char * command, char * args[]){
+void exec_(command_t command, char * args[]){
     pid_t parent = getpid();
     pid_t pid = fork();
     if (pid == -1) {
@@ -27,8 +28,17 @@ void exec_(char * command, char * args[]){
     }
     else {
         // we are the child
-        execvp(command, args);
-        perror(command);
+        if(command.redirect.redirect != NULL){
+            printf("redirect in exec");
+            int append = 0;
+
+            if (command.redirect.redirect == ">>")
+                append = 1;
+
+            redirect(command.redirect.from, command.redirect.to, append);
+        }
+        execvp(command.current_command, args);
+        perror(command.current_command);
         _exit(EXIT_FAILURE);   // exec never returns
     }
 }
@@ -71,11 +81,8 @@ int redirect(char* from, char * to, int append){
         perror("open");
         return -1;
     }
-
     else {
         int ret = dup2_(in, out);
-        close(in);
-        close(out);
         return ret;
     }
 }

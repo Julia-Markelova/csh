@@ -17,8 +17,10 @@ int yylex();
 
 // VARIABLES
 //----------------------------------------------------------------------------------
-char * current_command;
-char * args[32];
+
+command_t command;
+
+char * args[ARGS_SIZE];
 size_t i = 1;
 
 //---------------------------------------------------------------------------------
@@ -52,8 +54,8 @@ int main() {
 }
 
 %type <str> WORD EQUALS NEWLINE SEMICOLON
-%type <str> GREAT LESS GREAT_GREAT GREAT_AMP
-%type <str> COMMAND COMMANDS EXPR REDIRECTION REDIRECTS
+%type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS
+%type <str> COMMAND COMMANDS EXPR
 %type <str> PIPE_LIST CMD_ARGS
 
 
@@ -67,12 +69,8 @@ COMMAND_LINE:
     | /*nothing*/
 
 EXPR:
-    PIPE_LIST COMMANDS NEWLINE {
-        printf("%s (%s %s)  \n", "commands pipe commands", $1,  $3);
-    }
-    |COMMANDS {
-        printf("commands\n");
-    }
+    PIPE_LIST COMMANDS NEWLINE
+    |COMMANDS
     | NEWLINE
 
 
@@ -83,55 +81,40 @@ PIPE_LIST:
 
 COMMANDS:
     CMD_ARGS REDIRECTION {
-        printf("command redirs\n");
-    }
-    |CMD_ARGS {
-        args[0] = current_command;
-        exec_(current_command, args);
-        i = 0;
+        args[0] = command.current_command;
+        exec_(command, args);
+        i = 1;
+        for (int k = 0; k < ARGS_SIZE; k++)
+            args[k] = NULL;
     }
 
 
 REDIRECTION:
-    REDIRECTS WORD {
-        if ($2 == ">") {
-            redirect(NULL, $2, 0);
-        }
-        else if ($2 == ">>") {
-            redirect(NULL, $2, 1);
-        }
-        else if ($2 == "<") {
-            redirect($2, NULL, 0);
-        }
-        else if (($2 == ">&") || ($2 == "&>")) {
-
-        }
+    REDIRECTS WORD{
+        command.redirect.redirect = $1;
+        command.redirect.to = $2;
     }
-
+    |/*nothing*/
 
 REDIRECTS:
     GREAT
-    | LESS
-    | GREAT_GREAT
-    | GREAT_AMP
-
+    |LESS
+    |GREAT_GREAT
+    |GREAT_AMP
 
 CMD_ARGS:
-    COMMAND ARGS {
-        printf("cmd_args\n");
-    }
+    COMMAND ARGS
 
 COMMAND:
     WORD {
-        printf("command\n");
-        current_command = $1;
+        command.current_command = $1;
+        command.redirect.redirect = NULL;
     }
 
 
 ARGS:
     ARGS WORD {
-        printf("args + word\n");
-        if (i < 32 ) {
+        if (i < ARGS_SIZE ) {
             args[i] = $2;
             i++;
         }
@@ -140,7 +123,6 @@ ARGS:
         }
     }
     | WORD {
-        printf("word\n");
         args[i] = $1;
         i++;
     }
