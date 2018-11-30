@@ -22,6 +22,8 @@ void open_dir(char * dir_name);
 int redirect(char* from, char * to, int append);
 int dup2_(int in, int out);
 void exec_(command_t command, char * args[]);
+int cd(char * dir);
+void fork_exec(command_t command, char * args[]);
 
 #define ARGS_SIZE 32
 #endif //YULIASH_UTILS_H

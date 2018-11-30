@@ -11,27 +11,37 @@
 #include <errno.h>
 #include "utils.h"
 
+//TODO: >& cd kill set alias
 
-void print_msg(int fd, char * msg){
-    if (write(fd, msg, strlen(msg)) < 0  )
+void print_msg(int fd, char *msg) {
+    if (write(fd, msg, strlen(msg)) < 0)
         perror("write");
 }
 
-void exec_(command_t command, char * args[]){
-    pid_t parent = getpid();
+void exec_(command_t command, char *args[]) {
+    char *command_name = command.current_command;
+
+    if (strcmp(command_name, "cd") == 0)
+        cd(args[1]);
+
+    else {
+        fork_exec(command, args);
+    }
+}
+
+
+void fork_exec(command_t command, char *args[]) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork:");
-    }
-    else if (pid > 0) {
+    } else if (pid > 0) {
         int status;
         waitpid(pid, &status, 0);
-    }
-    else {
+    } else {
         // we are the child
-        if(command.redirect.redirect != NULL){
+        if (command.redirect.redirect != NULL) {
             int append = 0;
-            char * redir = command.redirect.redirect;
+            char *redir = command.redirect.redirect;
 
             if (strcmp(redir, ">>") == 0)
                 append = 1;
@@ -48,7 +58,7 @@ void exec_(command_t command, char * args[]){
 }
 
 
-int dup2_(int in, int out){
+int dup2_(int in, int out) {
     if (dup2(in, 0) < 0) {
         perror("redirect");
         return -1;
@@ -60,7 +70,7 @@ int dup2_(int in, int out){
     return 0;
 }
 
-int redirect(char* from, char * to, int append){
+int redirect(char *from, char *to, int append) {
     int in;
     int out;
 
@@ -72,24 +82,31 @@ int redirect(char* from, char * to, int append){
 
     // check if there any file as stdin
     if (to) {
-        mode_t mode =  S_IRWXU | S_IRGRP | S_IROTH;
+        mode_t mode = S_IRWXU | S_IRGRP | S_IROTH;
         // check for append flag
         if (append == 1)
             out = open(to, O_RDWR | O_APPEND | O_CREAT, mode);
         else
             out = open(to, O_RDWR | O_TRUNC | O_CREAT, mode);
-    }
-    else
+    } else
         out = 1;
 
     if (in < 0 || out < 0) {
         perror("open");
         return -1;
-    }
-    else {
+    } else {
         int ret = dup2_(in, out);
         return ret;
     }
 }
+
+int cd(char *dir) {
+    if (!dir) {
+        dir = getenv("HOME");
+    }
+    if (chdir(dir) != 0)
+        perror("cd");
+}
+
 
 

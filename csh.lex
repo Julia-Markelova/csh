@@ -7,7 +7,7 @@
 "|"                     return PIPE;
 "="                     return EQUALS;
 ";"                     return SEMICOLON;
-[a-zA-Z]+               yylval.str = strdup(yytext); return WORD;
+[a-zA-Z/_]+               yylval.str = strdup(yytext); return WORD;
 ">"                     yylval.str = strdup(yytext); return GREAT;
 "<"                     yylval.str = strdup(yytext); return LESS;
 ">>"                    yylval.str = strdup(yytext); return GREAT_GREAT;

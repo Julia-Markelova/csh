@@ -50,8 +50,10 @@ int main() {
 
 %union {
     char * str;
+    int number;
 }
 
+%type <number> NUMBER
 %type <str> WORD EQUALS NEWLINE SEMICOLON
 %type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
 %type <str> COMMAND COMMANDS EXPR
@@ -68,13 +70,13 @@ COMMAND_LINE:
 
 EXPR:
     PIPE_LIST COMMAND_LIST NEWLINE
-    |COMMAND_LIST
+    | COMMAND_LIST
     | NEWLINE
 
 
 PIPE_LIST:
     PIPE_LIST PIPE CMD_ARGS
-    | CMD_ARGS
+    | CMD_ARGS PIPE CMD_ARGS
 
 
 COMMAND_LIST:
@@ -97,6 +99,16 @@ REDIRECTION:
         command.redirect.to = $2;
     }
     |/*nothing*/
+    |NUMBER GREAT_AMP WORD{
+        command.redirect.from = (char *)$1;
+        command.redirect.redirect = $2;
+        command.redirect.to = $3;
+    }
+    |NUMBER GREAT_AMP NUMBER{
+         command.redirect.from = (char *)$1;
+         command.redirect.redirect = $2;
+         command.redirect.to = (char *)$3;
+    }
 
 REDIRECTS:
     GREAT
