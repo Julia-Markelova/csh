@@ -17,6 +17,7 @@ void print_msg(int fd, char * msg){
 }
 
 void exec_(command_t command, char * args[]){
+    printf("%s \n", command.redirect.redirect);
     pid_t parent = getpid();
     pid_t pid = fork();
     if (pid == -1) {
@@ -29,10 +30,9 @@ void exec_(command_t command, char * args[]){
     else {
         // we are the child
         if(command.redirect.redirect != NULL){
-            printf("redirect in exec");
             int append = 0;
 
-            if (command.redirect.redirect == ">>")
+            if (strcmp(command.redirect.redirect, ">>") == 0)
                 append = 1;
 
             redirect(command.redirect.from, command.redirect.to, append);
@@ -69,10 +69,10 @@ int redirect(char* from, char * to, int append){
     // check if there any file as stdin
     if (to) {
         // check for append flag
-        if (append == 0)
-            out = open(to, O_WRONLY | O_TRUNC | O_CREAT);
-        else
+        if (append == 1)
             out = open(to, O_WRONLY | O_APPEND | O_CREAT);
+        else
+            out = open(to, O_WRONLY | O_CREAT | O_CREAT);
     }
     else
         out = 0;
