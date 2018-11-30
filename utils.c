@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <wait.h>
+#include <errno.h>
 #include "utils.h"
 
 
@@ -17,7 +18,6 @@ void print_msg(int fd, char * msg){
 }
 
 void exec_(command_t command, char * args[]){
-    printf("%s \n", command.redirect.redirect);
     pid_t parent = getpid();
     pid_t pid = fork();
     if (pid == -1) {
@@ -39,7 +39,7 @@ void exec_(command_t command, char * args[]){
         }
         execvp(command.current_command, args);
         perror(command.current_command);
-        _exit(EXIT_FAILURE);   // exec never returns
+        _exit(EXIT_FAILURE);   // exec never return
     }
 }
 
@@ -68,16 +68,17 @@ int redirect(char* from, char * to, int append){
 
     // check if there any file as stdin
     if (to) {
+        mode_t mode =  S_IRWXU | S_IRGRP | S_IROTH;
         // check for append flag
         if (append == 1)
-            out = open(to, O_WRONLY | O_APPEND | O_CREAT);
+            out = open(to, O_WRONLY | O_APPEND | O_CREAT, mode);
         else
-            out = open(to, O_WRONLY | O_CREAT | O_CREAT);
+            out = open(to, O_WRONLY | O_TRUNC | O_CREAT, mode);
     }
     else
         out = 0;
 
-    if (in < 0 || out < 0){
+    if (in < 0 || out < 0) {
         perror("open");
         return -1;
     }

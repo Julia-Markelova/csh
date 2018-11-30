@@ -54,9 +54,9 @@ int main() {
 }
 
 %type <str> WORD EQUALS NEWLINE SEMICOLON
-%type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS
+%type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
 %type <str> COMMAND COMMANDS EXPR
-%type <str> PIPE_LIST CMD_ARGS
+%type <str> PIPE_LIST CMD_ARGS COMMAND_LIST
 
 
 %%
@@ -69,8 +69,8 @@ COMMAND_LINE:
     | /*nothing*/
 
 EXPR:
-    PIPE_LIST COMMANDS NEWLINE
-    |COMMANDS
+    PIPE_LIST COMMAND_LIST NEWLINE
+    |COMMAND_LIST
     | NEWLINE
 
 
@@ -78,15 +78,18 @@ PIPE_LIST:
     PIPE_LIST PIPE CMD_ARGS
     | CMD_ARGS
 
-
-COMMANDS:
-    CMD_ARGS REDIRECTION {
+COMMAND_LIST:
+    COMMANDS{
         args[0] = command.current_command;
         exec_(command, args);
         i = 1;
         for (int k = 0; k < ARGS_SIZE; k++)
             args[k] = NULL;
     }
+
+COMMANDS:
+    CMD_ARGS REDIRECTION
+    |COMMANDS REDIRECTION
 
 
 REDIRECTION:
