@@ -1,3 +1,6 @@
 rm -rf lex.yy.c y.tab.c y.tab.h;
-yacc -d csh.yacc && lex csh.lex && cc lex.yy.c y.tab.c utils.c -o my_csh && ./my_csh
+yacc -d csh.yacc &&
+lex csh.lex &&
+cc lex.yy.c y.tab.c utils.c -o my_csh &&
+./my_csh
 

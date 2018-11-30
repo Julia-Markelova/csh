@@ -20,6 +20,8 @@ int yylex();
 
 command_t command;
 
+size_t p = 0;
+
 char * args[ARGS_SIZE];
 size_t i = 1;
 
@@ -43,18 +45,19 @@ int main() {
 // TOKENS
 //----------------------------------------------------------------------------------
 
-%token NUMBER WORD NEWLINE SEMICOLON
+%token NUMBER WORD NEWLINE SEMICOLON VARIABLE
 %token EQUALS GREAT LESS GREAT_GREAT GREAT_AMP
-%token CD EXIT SET
 %token REDIRECT PIPE
 
 %union {
     char * str;
+    char * sign;
     int number;
 }
 
 %type <number> NUMBER
-%type <str> WORD EQUALS NEWLINE SEMICOLON
+%type <sign> EQUALS
+%type <str> WORD VARIABLE NEWLINE SEMICOLON
 %type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
 %type <str> COMMAND COMMANDS EXPR
 %type <str> PIPE_LIST CMD_ARGS COMMAND_LIST
@@ -118,6 +121,9 @@ REDIRECTS:
 
 CMD_ARGS:
     COMMAND ARGS
+    | COMMAND VARIABLE{
+        args[1] = $2;
+    }
 
 COMMAND:
     WORD {
@@ -125,6 +131,14 @@ COMMAND:
         command.redirect.redirect = NULL;
         command.redirect.from = NULL;
         command.redirect.to = NULL;
+    }
+    | WORD EQUALS WORD{
+       variables[p].key = $1;
+       variables[p].value = $3;
+       p++;
+       command.current_command = $2;
+      // printf("%s %s %s", $1, $2, $3);
+
     }
 
 ARGS:

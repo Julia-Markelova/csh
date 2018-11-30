@@ -5,9 +5,10 @@
 %%
 [0-9]+                  return NUMBER;
 "|"                     return PIPE;
-"="                     return EQUALS;
+"="                     yylval.sign = strdup(yytext); return EQUALS;
 ";"                     return SEMICOLON;
-[a-zA-Z/_]+               yylval.str = strdup(yytext); return WORD;
+[a-zA-Z/_.]+            yylval.str = strdup(yytext); return WORD;
+[$][a-zA-Z0-9]+         yylval.str = strdup(yytext); return VARIABLE;
 ">"                     yylval.str = strdup(yytext); return GREAT;
 "<"                     yylval.str = strdup(yytext); return LESS;
 ">>"                    yylval.str = strdup(yytext); return GREAT_GREAT;

@@ -11,7 +11,7 @@
 #include <errno.h>
 #include "utils.h"
 
-//TODO: >& cd kill set alias
+//TODO: >& kill set_ alias new_process
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
@@ -24,11 +24,31 @@ void exec_(command_t command, char *args[]) {
     if (strcmp(command_name, "cd") == 0)
         cd(args[1]);
 
+    else if (strcmp(command_name, "export") == 0){
+        set_(args[1]);
+    }
+
+    else if (strcmp(command_name, "=") == 0){
+        //do nothing
+    }
+
+    else if (strcmp(command_name, "echo") == 0 ) {
+        char buf[1];
+        slice_str(args[1], buf, 0, 0);
+        if (strcmp(buf, "$") == 0) {
+            const size_t len = strlen(args[1]);
+            char buffer[len + 1];
+            slice_str(args[1], buffer, 1, len);
+            args[1] = getenv(buffer);
+            if (!args[1])
+                args[1] = find_local_variable(buffer);
+            fork_exec(command, args);
+        }
+    }
     else {
         fork_exec(command, args);
     }
 }
-
 
 void fork_exec(command_t command, char *args[]) {
     pid_t pid = fork();
@@ -100,7 +120,7 @@ int redirect(char *from, char *to, int append) {
     }
 }
 
-int cd(char *dir) {
+void cd(char *dir) {
     if (!dir) {
         dir = getenv("HOME");
     }
@@ -108,5 +128,30 @@ int cd(char *dir) {
         perror("cd");
 }
 
+void set_(char *name){
+    for (size_t i = 0; i < ARGS_SIZE; i++){
+        if (variables[i].key && strcmp(variables[i].key, name) == 0){
+            if (setenv(variables[i].key, variables[i].value, 1) != 0) {
+                perror("export var");
+            }
+        }
+    }
+}
 
+
+void slice_str(const char * str, char * buffer, size_t start, size_t end) {
+    size_t j = 0;
+    for ( size_t i = start; i <= end; ++i ) {
+        buffer[j++] = str[i];
+    }
+    buffer[j] = 0;
+}
+
+char * find_local_variable(char * name){
+    for (size_t i = 0; i < ARGS_SIZE; i++) {
+        if (variables[i].key && strcmp(variables[i].key, name) == 0)
+            return variables[i].value;
+    }
+    return NULL;
+}
 
