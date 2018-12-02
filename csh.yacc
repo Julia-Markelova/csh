@@ -93,23 +93,40 @@ COMMAND_LIST:
 
 COMMANDS:
     CMD_ARGS REDIRECTION
-    |COMMANDS REDIRECTION
 
 
 REDIRECTION:
     REDIRECTS WORD{
-        command.redirect.redirect = $1;
-        command.redirect.to = $2;
+        if (strcmp($1, "<") == 0) {
+            command.redirect.less = $1;
+            command.redirect.from = $2;
+        }
+        else{
+            command.redirect.great = $1;
+            command.redirect.to = $2;
+        }
+        command.redirect.redirect = 1;
+    }
+    |REDIRECTION REDIRECTS WORD{
+        if (strcmp($2, "<") == 0) {
+            command.redirect.less = $2;
+            command.redirect.from = $3;
+        }
+        else{
+            command.redirect.great = $2;
+            command.redirect.to = $3;
+        }
+        command.redirect.redirect = 1;
     }
     |/*nothing*/
     |NUMBER GREAT_AMP WORD{
         command.redirect.from = (char *)$1;
-        command.redirect.redirect = $2;
+        command.redirect.great = $2;
         command.redirect.to = $3;
     }
     |NUMBER GREAT_AMP NUMBER{
          command.redirect.from = (char *)$1;
-         command.redirect.redirect = $2;
+         command.redirect.great = $2;
          command.redirect.to = (char *)$3;
     }
 
@@ -128,17 +145,17 @@ CMD_ARGS:
 COMMAND:
     WORD {
         command.current_command = $1;
-        command.redirect.redirect = NULL;
+        command.redirect.great = NULL;
+        command.redirect.less = NULL;
         command.redirect.from = NULL;
         command.redirect.to = NULL;
+        command.redirect.redirect = 0;
     }
     | WORD EQUALS WORD{
        variables[p].key = $1;
        variables[p].value = $3;
        p++;
        command.current_command = $2;
-      // printf("%s %s %s", $1, $2, $3);
-
     }
 
 ARGS:

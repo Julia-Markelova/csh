@@ -11,7 +11,7 @@
 #include <errno.h>
 #include "utils.h"
 
-//TODO: >& kill set_ alias new_process
+//TODO: >& kill set_ alias pipe
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
@@ -24,81 +24,93 @@ void exec_(command_t command, char *args[]) {
     if (strcmp(command_name, "cd") == 0)
         cd(args[1]);
 
-    else if (strcmp(command_name, "export") == 0){
+    else if (strcmp(command_name, "export") == 0) {
         set_(args[1]);
-    }
-
-    else if (strcmp(command_name, "=") == 0){
+    } else if (strcmp(command_name, "=") == 0) {
         //do nothing
-    }
-
-    else if (strcmp(command_name, "echo") == 0 ) {
+    } else if (strcmp(command_name, "echo") == 0) {
         char buf[1];
         slice_str(args[1], buf, 0, 0);
+
         if (strcmp(buf, "$") == 0) {
             const size_t len = strlen(args[1]);
             char buffer[len + 1];
             slice_str(args[1], buffer, 1, len);
             args[1] = getenv(buffer);
+
             if (!args[1])
                 args[1] = find_local_variable(buffer);
-            fork_exec(command, args);
         }
-    }
-    else {
+        fork_exec(command, args);
+    } else {
         fork_exec(command, args);
     }
 }
 
-void fork_exec(command_t command, char *args[]) {
+int fork_exec(command_t command, char *args[]) {
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork:");
+        return -1;
     } else if (pid > 0) {
         int status;
         waitpid(pid, &status, 0);
     } else {
         // we are the child
-        if (command.redirect.redirect != NULL) {
+        // check io redirection
+        if (command.redirect.redirect) {
             int append = 0;
-            char *redir = command.redirect.redirect;
+            int return_value = 0;
+            // out redirection
+            if (command.redirect.great) {
+                char *redir = command.redirect.great;
+                if (strcmp(redir, ">>") == 0)
+                    append = 1;
+                return_value = redirect(command.redirect.from, command.redirect.to, append);
+                if (return_value < 0)
+                    return -1;
+            }
 
-            if (strcmp(redir, ">>") == 0)
-                append = 1;
-
-            if (strcmp(redir, "<") == 0)
-                redirect(command.redirect.to, command.redirect.from, 0);
-            else
-                redirect(command.redirect.from, command.redirect.to, append);
+            //in redirection
+            if (command.redirect.less) {
+                return_value = redirect(command.redirect.from, command.redirect.to, 0);
+            }
+            if (return_value == 0) {
+                execvp(command.current_command, args);
+                perror(command.current_command);
+                _exit(EXIT_FAILURE);   // exec never return
+            } else {
+                return -1;
+            }
+        } else {
+            if (execvp(command.current_command, args)) {
+                perror(command.current_command);
+                return -1;
+                _exit(EXIT_FAILURE);   // exec never return
+            }
+            return 0;
         }
-        execvp(command.current_command, args);
-        perror(command.current_command);
-        _exit(EXIT_FAILURE);   // exec never return
     }
 }
 
-
-int dup2_(int in, int out) {
-    if (dup2(in, 0) < 0) {
-        perror("redirect");
-        return -1;
-    }
-    if (dup2(out, 1) < 0) {
-        perror("redirect");
-        return -1;
-    }
-    return 0;
-}
 
 int redirect(char *from, char *to, int append) {
+    printf("from %s, to %s \n", from, to);
     int in;
     int out;
 
     // checkcat  if there any file as stdout
-    if (from)
+    if (from) {
         in = open(from, O_RDONLY);
-    else
-        in = 0;
+        if (in < 0) {
+            perror(from);
+            return -1;
+        }
+        else if (dup2(in, 0) < 0) {
+            perror("redirect");
+            return -1;
+        }
+    }
 
     // check if there any file as stdin
     if (to) {
@@ -108,16 +120,16 @@ int redirect(char *from, char *to, int append) {
             out = open(to, O_RDWR | O_APPEND | O_CREAT, mode);
         else
             out = open(to, O_RDWR | O_TRUNC | O_CREAT, mode);
-    } else
-        out = 1;
 
-    if (in < 0 || out < 0) {
-        perror("open");
-        return -1;
-    } else {
-        int ret = dup2_(in, out);
-        return ret;
+        if (out < 0) {
+            perror(to);
+            return -1;
+        } else if (dup2(out, 1) < 0) {
+            perror("redirect");
+            return -1;
+        }
     }
+    return 0;
 }
 
 void cd(char *dir) {
@@ -125,12 +137,12 @@ void cd(char *dir) {
         dir = getenv("HOME");
     }
     if (chdir(dir) != 0)
-        perror("cd");
+        perror(dir);
 }
 
-void set_(char *name){
-    for (size_t i = 0; i < ARGS_SIZE; i++){
-        if (variables[i].key && strcmp(variables[i].key, name) == 0){
+void set_(char *name) {
+    for (size_t i = 0; i < ARGS_SIZE; i++) {
+        if (variables[i].key && strcmp(variables[i].key, name) == 0) {
             if (setenv(variables[i].key, variables[i].value, 1) != 0) {
                 perror("export var");
             }
@@ -139,15 +151,15 @@ void set_(char *name){
 }
 
 
-void slice_str(const char * str, char * buffer, size_t start, size_t end) {
+void slice_str(const char *str, char *buffer, size_t start, size_t end) {
     size_t j = 0;
-    for ( size_t i = start; i <= end; ++i ) {
+    for (size_t i = start; i <= end; ++i) {
         buffer[j++] = str[i];
     }
     buffer[j] = 0;
 }
 
-char * find_local_variable(char * name){
+char *find_local_variable(char *name) {
     for (size_t i = 0; i < ARGS_SIZE; i++) {
         if (variables[i].key && strcmp(variables[i].key, name) == 0)
             return variables[i].value;
