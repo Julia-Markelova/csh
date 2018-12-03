@@ -11,7 +11,7 @@
 #include <errno.h>
 #include "utils.h"
 
-//TODO: >& kill set_ alias pipe
+//TODO: >& kill set_ pipe variables
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
@@ -23,25 +23,10 @@ void exec_(command_t command, char *args[]) {
 
     if (strcmp(command_name, "cd") == 0)
         cd(args[1]);
-
     else if (strcmp(command_name, "export") == 0) {
         set_(args[1]);
     } else if (strcmp(command_name, "=") == 0) {
         //do nothing
-    } else if (strcmp(command_name, "echo") == 0) {
-        char buf[1];
-        slice_str(args[1], buf, 0, 0);
-
-        if (strcmp(buf, "$") == 0) {
-            const size_t len = strlen(args[1]);
-            char buffer[len + 1];
-            slice_str(args[1], buffer, 1, len);
-            args[1] = getenv(buffer);
-
-            if (!args[1])
-                args[1] = find_local_variable(buffer);
-        }
-        fork_exec(command, args);
     } else {
         fork_exec(command, args);
     }
@@ -59,6 +44,7 @@ int fork_exec(command_t command, char *args[]) {
         // we are the child
         // check io redirection
         if (command.redirect.redirect) {
+
             int append = 0;
             int return_value = 0;
             // out redirection
@@ -66,27 +52,28 @@ int fork_exec(command_t command, char *args[]) {
                 char *redir = command.redirect.great;
                 if (strcmp(redir, ">>") == 0)
                     append = 1;
-                return_value = redirect(command.redirect.from, command.redirect.to, append);
+                return_value = redirect(command.redirect.from,
+                                        command.redirect.to, append);
                 if (return_value < 0)
                     return -1;
             }
 
             //in redirection
             if (command.redirect.less) {
-                return_value = redirect(command.redirect.from, command.redirect.to, 0);
+                return_value = redirect(command.redirect.from,
+                                        command.redirect.to, 0);
             }
             if (return_value == 0) {
                 execvp(command.current_command, args);
                 perror(command.current_command);
                 _exit(EXIT_FAILURE);   // exec never return
             } else {
-                return -1;
+                return return_value;
             }
         } else {
             if (execvp(command.current_command, args)) {
                 perror(command.current_command);
                 return -1;
-                _exit(EXIT_FAILURE);   // exec never return
             }
             return 0;
         }
@@ -95,26 +82,28 @@ int fork_exec(command_t command, char *args[]) {
 
 
 int redirect(char *from, char *to, int append) {
-    printf("from %s, to %s \n", from, to);
     int in;
     int out;
 
-    // checkcat  if there any file as stdout
+    printf("from %s to %s\n", from, to);
+
+    // check if there any file as stdin
     if (from) {
         in = open(from, O_RDONLY);
         if (in < 0) {
             perror(from);
-            return -1;
+            return errno;
         }
         else if (dup2(in, 0) < 0) {
             perror("redirect");
-            return -1;
+            return errno;
         }
     }
 
-    // check if there any file as stdin
+    // check if there any file as stdout
     if (to) {
-        mode_t mode = S_IRWXU | S_IRGRP | S_IROTH;
+        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+
         // check for append flag
         if (append == 1)
             out = open(to, O_RDWR | O_APPEND | O_CREAT, mode);
@@ -123,11 +112,17 @@ int redirect(char *from, char *to, int append) {
 
         if (out < 0) {
             perror(to);
-            return -1;
+            return errno;
         } else if (dup2(out, 1) < 0) {
             perror("redirect");
-            return -1;
+            return errno;
         }
+    }
+
+    if (!to && !from) {
+        errno = EIO;
+        perror("csh");
+        return errno;
     }
     return 0;
 }
@@ -148,6 +143,18 @@ void set_(char *name) {
             }
         }
     }
+}
+
+char * substitute_variable(char * arg ){
+    const size_t len = strlen(arg);
+    char buffer[len + 1];
+    slice_str(arg, buffer, 1, len);
+    arg = getenv(buffer);
+
+    if (!arg)
+        arg = find_local_variable(buffer);
+
+    return arg;
 }
 
 

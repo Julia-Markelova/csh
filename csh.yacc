@@ -59,7 +59,7 @@ int main() {
 %type <sign> EQUALS
 %type <str> WORD VARIABLE NEWLINE SEMICOLON
 %type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
-%type <str> COMMAND COMMANDS EXPR
+%type <str> COMMAND COMMANDS EXPR ARG
 %type <str> PIPE_LIST CMD_ARGS COMMAND_LIST
 
 %%
@@ -96,7 +96,7 @@ COMMANDS:
 
 
 REDIRECTION:
-    REDIRECTS WORD{
+    REDIRECTS ARG{
         if (strcmp($1, "<") == 0) {
             command.redirect.less = $1;
             command.redirect.from = $2;
@@ -105,9 +105,9 @@ REDIRECTION:
             command.redirect.great = $1;
             command.redirect.to = $2;
         }
-        command.redirect.redirect = 1;
+        command.redirect.redirect = TRUE;
     }
-    |REDIRECTION REDIRECTS WORD{
+    |REDIRECTION REDIRECTS ARG{
         if (strcmp($2, "<") == 0) {
             command.redirect.less = $2;
             command.redirect.from = $3;
@@ -116,10 +116,10 @@ REDIRECTION:
             command.redirect.great = $2;
             command.redirect.to = $3;
         }
-        command.redirect.redirect = 1;
+        command.redirect.redirect = TRUE;
     }
     |/*nothing*/
-    |NUMBER GREAT_AMP WORD{
+    |NUMBER GREAT_AMP ARG{
         command.redirect.from = (char *)$1;
         command.redirect.great = $2;
         command.redirect.to = $3;
@@ -138,9 +138,7 @@ REDIRECTS:
 
 CMD_ARGS:
     COMMAND ARGS
-    | COMMAND VARIABLE{
-        args[1] = $2;
-    }
+
 
 COMMAND:
     WORD {
@@ -149,7 +147,7 @@ COMMAND:
         command.redirect.less = NULL;
         command.redirect.from = NULL;
         command.redirect.to = NULL;
-        command.redirect.redirect = 0;
+        command.redirect.redirect = FALSE;
     }
     | WORD EQUALS WORD{
        variables[p].key = $1;
@@ -159,7 +157,7 @@ COMMAND:
     }
 
 ARGS:
-    ARGS WORD {
+    ARGS ARG {
         if (i < ARGS_SIZE ) {
             args[i] = $2;
             i++;
@@ -168,9 +166,17 @@ ARGS:
             print_msg(2, "Too many args.\n");
         }
     }
-    | WORD {
+    | ARG {
         args[i] = $1;
         i++;
     }
     | /*nothing*/
+
+
+ARG:
+    WORD
+    | VARIABLE {
+        $$ = substitute_variable($1);
+        printf($$);
+    }
 

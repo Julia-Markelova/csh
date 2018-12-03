@@ -6,6 +6,8 @@
 #define YULIASH_UTILS_H
 
 #define ARGS_SIZE 32
+#define TRUE 1
+#define FALSE 0
 
 typedef struct current_redirect{
     char * from;
@@ -18,7 +20,6 @@ typedef struct current_redirect{
 typedef struct current_command {
     char * current_command;
     redirect_t redirect;
-    int pid;
 } command_t;
 
 typedef struct key_value{
@@ -37,4 +38,5 @@ void set_(char *name);
 int fork_exec(command_t command, char * args[]);
 void slice_str(const char * str, char * buffer, size_t start, size_t end);
 char * find_local_variable(char * name);
+char * substitute_variable(char * arg );
 #endif //YULIASH_UTILS_H
