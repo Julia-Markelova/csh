@@ -9,28 +9,67 @@
 #include <fcntl.h>
 #include <wait.h>
 #include <errno.h>
+#include <sys/types.h>
 #include "utils.h"
 
-//TODO: >& kill set_ pipe
+//TODO: >& unset? pipe ctrl+c
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
         perror("write");
 }
 
-int pipe_(){
+int pipe_(command_t command1, char *args[], command_t command2) {
+    int fd[2];
+    pid_t child;
 
+    child = fork();
+    pipe(fd);
+
+    if (child == -1) {
+        perror("fork");
+        return -1;
+    }
+
+    if (child == 0) {
+        dup2(fd[1], STDOUT_FILENO);
+        close(fd[0]);
+        close(fd[1]);
+        execvp(command1.current_command, args);
+        perror(command1.current_command);
+        return -1;
+    } else {
+        child = fork();
+
+        if (child == 0) {
+            dup2(fd[0], STDIN_FILENO);
+            close(fd[1]);
+            close(fd[0]);
+            execvp(command2.current_command,args);
+            perror(command2.current_command);
+            return -1;
+        } else {
+            int status;
+            close(fd[0]);
+            close(fd[1]);
+            waitpid(child, &status, 0);
+        }
+    }
+
+    return 0;
 }
 
 void exec_(command_t command, char *args[]) {
     char *command_name = command.current_command;
 
-    if (strcmp(command_name, "cd") == 0)
+    if (strcmp(command_name, "cd") == 0) {
         cd(args[1]);
-    else if (strcmp(command_name, "export") == 0) {
+    } else if (strcmp(command_name, "export") == 0) {
         set_(args[1]);
     } else if (strcmp(command_name, "=") == 0) {
         //do nothing
+    } else if (strcmp(command_name, "exit") == 0) {
+        exit(0);
     } else {
         fork_exec(command, args);
     }
@@ -75,6 +114,7 @@ int fork_exec(command_t command, char *args[]) {
                 return return_value;
             }
         } else {
+
             if (execvp(command.current_command, args)) {
                 perror(command.current_command);
                 return -1;
@@ -97,8 +137,7 @@ int redirect(char *from, char *to, int append) {
         if (in < 0) {
             perror(from);
             return errno;
-        }
-        else if (dup2(in, 0) < 0) {
+        } else if (dup2(in, 0) < 0) {
             perror("redirect");
             return errno;
         }
@@ -149,7 +188,7 @@ void set_(char *name) {
     }
 }
 
-char * substitute_variable(char * arg ){
+char *substitute_variable(char *arg) {
     const size_t len = strlen(arg);
     char buffer[len + 1];
     slice_str(arg, buffer, 1, len);
@@ -177,12 +216,12 @@ char *find_local_variable(char *name) {
     return NULL;
 }
 
-void add_variable(char * key, char * value){
-        int i = 0;
-        while (i < ARGS_SIZE && variables[i].key && strcmp(variables[i].key, key) != 0){
-            i++;
-        }
-        variables[i].key = key;
-        variables[i].value = value;
+void add_variable(char *key, char *value) {
+    int i = 0;
+    while (i < ARGS_SIZE && variables[i].key && strcmp(variables[i].key, key) != 0) {
+        i++;
+    }
+    variables[i].key = key;
+    variables[i].value = value;
 }
 

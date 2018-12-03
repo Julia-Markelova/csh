@@ -34,6 +34,7 @@ int yywrap() {
 }
 
 int main() {
+
         yyparse();
         return 0;
 }
@@ -70,14 +71,16 @@ COMMAND_LINE:
     | /*nothing*/
 
 EXPR:
-    PIPE_LIST COMMAND_LIST NEWLINE
+     COMMAND_LIST PIPE_LIST NEWLINE
     | COMMAND_LIST
     | NEWLINE
 
 
 PIPE_LIST:
     PIPE_LIST PIPE CMD_ARGS
-    | CMD_ARGS PIPE CMD_ARGS
+    | CMD_ARGS PIPE CMD_ARGS {
+       // pipe_();
+    }
 
 
 COMMAND_LIST:
@@ -136,6 +139,7 @@ REDIRECTS:
 
 CMD_ARGS:
     COMMAND ARGS
+    | COMMAND ARGS
 
 
 COMMAND:
@@ -155,16 +159,20 @@ COMMAND:
 ARGS:
     ARGS ARG {
         if (i < ARGS_SIZE ) {
-            args[i] = $2;
-            i++;
+            if ($2) {
+                args[i] = $2;
+                i++;
+            }
         }
         else {
             print_msg(2, "Too many args.\n");
         }
     }
     | ARG {
-        args[i] = $1;
-        i++;
+        if ($1) {
+            args[i] = $1;
+            i++;
+        }
     }
     | /*nothing*/
 
