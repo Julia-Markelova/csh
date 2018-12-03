@@ -20,8 +20,6 @@ int yylex();
 
 command_t command;
 
-size_t p = 0;
-
 char * args[ARGS_SIZE];
 size_t i = 1;
 
@@ -150,9 +148,7 @@ COMMAND:
         command.redirect.redirect = FALSE;
     }
     | WORD EQUALS WORD{
-       variables[p].key = $1;
-       variables[p].value = $3;
-       p++;
+       add_variable($1, $3);
        command.current_command = $2;
     }
 
@@ -177,6 +173,5 @@ ARG:
     WORD
     | VARIABLE {
         $$ = substitute_variable($1);
-        printf($$);
     }
 

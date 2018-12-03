@@ -11,11 +11,15 @@
 #include <errno.h>
 #include "utils.h"
 
-//TODO: >& kill set_ pipe variables
+//TODO: >& kill set_ pipe
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
         perror("write");
+}
+
+int pipe_(){
+
 }
 
 void exec_(command_t command, char *args[]) {
@@ -157,7 +161,6 @@ char * substitute_variable(char * arg ){
     return arg;
 }
 
-
 void slice_str(const char *str, char *buffer, size_t start, size_t end) {
     size_t j = 0;
     for (size_t i = start; i <= end; ++i) {
@@ -172,5 +175,14 @@ char *find_local_variable(char *name) {
             return variables[i].value;
     }
     return NULL;
+}
+
+void add_variable(char * key, char * value){
+        int i = 0;
+        while (i < ARGS_SIZE && variables[i].key && strcmp(variables[i].key, key) != 0){
+            i++;
+        }
+        variables[i].key = key;
+        variables[i].value = value;
 }
 
