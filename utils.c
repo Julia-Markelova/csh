@@ -7,56 +7,83 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <wait.h>
 #include <errno.h>
-#include <sys/types.h>
+#include <sys/wait.h>
 #include "utils.h"
 
 //TODO: >& unset? pipe ctrl+c
+pid_t waitpid(pid_t pid, int *status, int options);
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
         perror("write");
 }
 
-int pipe_(command_t command1, char *args[], command_t command2) {
-    int fd[2];
-    pid_t child;
+int pipe_(command_t command1, command_t command2) {
+    int pipes[2];
+    pid_t p1, p2;
+    p1 = fork();
 
+    if (p1 == 0) {
+        pipe(pipes);
+        fcntl(pipes[PIPE_RD], F_SETFL, O_NONBLOCK);
+
+        p2 = fork();
+        if (p2 == 0) {
+
+            dup2(pipes[PIPE_WR], STDOUT_FILENO);
+            execvp(command1.current_command, command1.args);
+        } else {
+
+            dup2(pipes[PIPE_RD], STDIN_FILENO);
+            close(STDERR_FILENO);
+            wait(NULL);
+            execvp(command2.current_command, command2.args);
+        }
+    }
+
+    return 0;
+
+/*    int fd[2];
+    pid_t child;
     child = fork();
-    pipe(fd);
+
+    if (pipe(fd) < 0)
+        perror("pipe");
 
     if (child == -1) {
         perror("fork");
         return -1;
     }
 
-    if (child == 0) {
-        dup2(fd[1], STDOUT_FILENO);
-        close(fd[0]);
-        close(fd[1]);
-        execvp(command1.current_command, args);
-        perror(command1.current_command);
-        return -1;
-    } else {
-        child = fork();
-
-        if (child == 0) {
-            dup2(fd[0], STDIN_FILENO);
-            close(fd[1]);
-            close(fd[0]);
-            execvp(command2.current_command,args);
+    else if (child == 0) {
+        *//* Child process closes up input side of pipe *//*
+       *//* if (dup2(fd[0], 0) < 0)
             perror(command2.current_command);
-            return -1;
-        } else {
-            int status;
-            close(fd[0]);
-            close(fd[1]);
-            waitpid(child, &status, 0);
-        }
-    }
 
-    return 0;
+        close(fd[1]);
+
+        execvp(command2.current_command, command2.args);
+        perror(command2.current_command);
+        return errno;*//*
+
+    }
+    else {
+        if (fork() == 0) {
+
+           *//* if (dup2(fd[1], 1) < 0) {
+                perror(command1.current_command);
+            }
+            close(fd[0]);
+
+            execvp(command1.current_command, command1.args);
+            perror(command1.current_command);
+            return errno;*//*
+
+        }
+
+        return 0;
+    }*/
 }
 
 void exec_(command_t command, char *args[]) {

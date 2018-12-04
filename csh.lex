@@ -1,10 +1,11 @@
 %{
 #include <stdio.h>
+#include "utils.h"
 #include "y.tab.h"
 %}
 %%
 [0-9]+                  return NUMBER;
-"|"                     return PIPE;
+"|"                     yylval.sign = strdup(yytext); return PIPE;
 "="                     yylval.sign = strdup(yytext); return EQUALS;
 ";"                     return SEMICOLON;
 [a-zA-Z/_.-]+           yylval.str = strdup(yytext); return WORD;

@@ -19,9 +19,10 @@ int yylex();
 //----------------------------------------------------------------------------------
 
 command_t command;
+command_t pipe_command;
 
-char * args[ARGS_SIZE];
 size_t i = 1;
+int is_pipe = FALSE;
 
 //---------------------------------------------------------------------------------
 
@@ -52,14 +53,16 @@ int main() {
     char * str;
     char * sign;
     int number;
+    command_t cmd;
 }
 
 %type <number> NUMBER
-%type <sign> EQUALS
+%type <sign> EQUALS PIPE
 %type <str> WORD VARIABLE NEWLINE SEMICOLON
 %type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
-%type <str> COMMAND COMMANDS EXPR ARG
-%type <str> PIPE_LIST CMD_ARGS COMMAND_LIST
+%type <str> ARG
+%type <cmd> PIPE_LIST
+%type <cmd> CMD_ARGS COMMAND COMMANDS EXPR COMMAND_LIST
 
 %%
 
@@ -73,23 +76,22 @@ COMMAND_LINE:
 EXPR:
      COMMAND_LIST PIPE_LIST NEWLINE
     | COMMAND_LIST
+    | PIPE_LIST
     | NEWLINE
 
 
 PIPE_LIST:
     PIPE_LIST PIPE CMD_ARGS
     | CMD_ARGS PIPE CMD_ARGS {
-       // pipe_();
+       printf("cmd1: %s; cmd2: %s \n", $1.current_command,
+              $3.current_command);
+       pipe_($1, $3);
     }
-
 
 COMMAND_LIST:
     COMMANDS{
-        args[0] = command.current_command;
-        exec_(command, args);
+        exec_(command, command.args);
         i = 1;
-        for (int k = 0; k < ARGS_SIZE; k++)
-            args[k] = NULL;
     }
 
 COMMANDS:
@@ -120,7 +122,7 @@ REDIRECTION:
         command.redirect.redirect = TRUE;
     }
     |/*nothing*/
-    |NUMBER GREAT_AMP ARG{
+/*    |NUMBER GREAT_AMP ARG{
         command.redirect.from = (char *)$1;
         command.redirect.great = $2;
         command.redirect.to = $3;
@@ -129,7 +131,7 @@ REDIRECTION:
          command.redirect.from = (char *)$1;
          command.redirect.great = $2;
          command.redirect.to = (char *)$3;
-    }
+    } */
 
 REDIRECTS:
     GREAT
@@ -138,29 +140,34 @@ REDIRECTS:
     |GREAT_AMP
 
 CMD_ARGS:
-    COMMAND ARGS
-    | COMMAND ARGS
+    COMMAND ARGS{
+        $$ = command;
+    }
 
 
 COMMAND:
     WORD {
         command.current_command = $1;
+        command.args[0] = command.current_command;
         command.redirect.great = NULL;
         command.redirect.less = NULL;
         command.redirect.from = NULL;
         command.redirect.to = NULL;
         command.redirect.redirect = FALSE;
+        for (int k = 1; k < ARGS_SIZE; k++)
+             command.args[k] = NULL;
     }
     | WORD EQUALS WORD{
        add_variable($1, $3);
        command.current_command = $2;
+       command.args[0] = command.current_command;
     }
 
 ARGS:
     ARGS ARG {
         if (i < ARGS_SIZE ) {
             if ($2) {
-                args[i] = $2;
+                command.args[i] = $2;
                 i++;
             }
         }
@@ -170,7 +177,7 @@ ARGS:
     }
     | ARG {
         if ($1) {
-            args[i] = $1;
+            command.args[i] = $1;
             i++;
         }
     }
