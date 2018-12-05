@@ -11,130 +11,59 @@
 #include <sys/wait.h>
 #include "utils.h"
 
-//TODO: >& unset? pipe ctrl+c
-
-
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
         perror("write");
 }
 
-int pipeline(command_t commands[])
-{
+int pipeline(command_t commands[]) {
     int fd[2];
     pid_t pid;
     int fdd = 0;
     int i = 0;
 
-    while (commands[i].current_command != NULL) {
-        pipe(fd);
-        if ((pid = fork()) == -1) {
-            perror("fork");
-            exit(1);
-        }
-        else if (pid == 0) {
+    if (commands[1].current_command == NULL) {
+        exec_(commands[0], commands[0].args);
+    } else {
+        while (commands[i].current_command != NULL) {
+            pipe(fd);
+            if ((pid = fork()) == -1) {
+                perror("fork");
+                exit(1);
+            } else if (pid == 0) {
 
-            if (dup2(fdd, 0) < 0){
-                perror(commands[i].current_command);
-                return -1;
-            }
-
-            if (commands[i+1].current_command != NULL) {
-                if (dup2(fd[1], 1) < 0) {
-                    perror(commands[i+1].current_command);
+                if (dup2(fdd, 0) < 0) {
+                    perror(commands[i].current_command);
                     return -1;
                 }
-            } else {
-                perror(commands[i].redirect.to);
-                if (commands[i].redirect.redirect) {
-                    printf("%s %d", commands[i].current_command,
-                           commands[i].redirect.redirect);
-                    int append = 0;
-                    int return_value = 0;
-                    // out redirection
-                    if (commands[i].redirect.great) {
-                        char *redir = commands[i].redirect.great;
-                        if (strcmp(redir, ">>") == 0)
-                            append = 1;
-                        return_value = redirect(commands[i].redirect.from,
-                                                commands[i].redirect.to, append);
-                        if (return_value < 0)
-                            return -1;
-                    }
 
-                    //in redirection
-                    if (commands[i].redirect.less) {
-                        return_value = redirect(commands[i].redirect.from,
-                                                commands[i].redirect.to, 0);
-                        if (return_value < 0)
+                if (commands[i + 1].current_command != NULL) {
+                    if (dup2(fd[1], 1) < 0) {
+                        perror(commands[i + 1].current_command);
+                        return -1;
+                    }
+                } else {
+                    if (commands[i].redirect.redirect) {
+                        int return_val = do_redirect_stuff(commands[i]);
+                        if (return_val < 0) {
+                            perror("redirect");
                             return -1;
+                        }
                     }
                 }
+                close(fd[0]);
+                execvp(commands[i].current_command, commands[i].args);
+                exit(1);
+            } else {
+                wait(NULL);
+                close(fd[1]);
+                fdd = fd[0];
+                i++;
             }
-            close(fd[0]);
-            execvp(commands[i].current_command, commands[i].args);
-            exit(1);
-        }
-        else {
-            wait(NULL);
-            close(fd[1]);
-            fdd = fd[0];
-            i++;
         }
     }
 }
 
-/*
-int pipe_(command_t command1, command_t command2) {
-    int pipes[2];
-    pid_t p1, p2;
-
-    if (pipe(pipes) < 0) {
-        perror("fork");
-        return -1;
-    }
-
-    p1 = fork();
-    if (p1 < 0) {
-        perror("fork");
-        return -1;
-    }
-
-    if (p1 == 0) {
-        close(pipes[RD_END]);
-        if (dup2(pipes[WR_END], STDOUT_FILENO) < 0) {
-            perror(command1.current_command);
-            return -1;
-        }
-        close(pipes[WR_END]);
-        execvp(command1.current_command, command1.args);
-        perror(command1.current_command);
-
-    } else {
-        p2 = fork();
-        if (p2 == 0) {
-            close(pipes[WR_END]);
-            if (dup2(pipes[RD_END], STDIN_FILENO) < 0) {
-                perror(command2.current_command);
-                return -1;
-            }
-            close(pipes[RD_END]);
-
-            execvp(command2.current_command, command2.args);
-            perror(command2.current_command);
-
-        }
-
-        close(pipes[RD_END]);
-        close(pipes[WR_END]);
-    }
-
-    close(pipes[RD_END]);
-    close(pipes[WR_END]);
-    return 0;
-
-}
-*/
 
 void exec_(command_t command, char *args[]) {
     char *command_name = command.current_command;
@@ -154,6 +83,7 @@ void exec_(command_t command, char *args[]) {
 
 int fork_exec(command_t command, char *args[]) {
     pid_t pid = fork();
+    PROCESS_ID = getpid();
     if (pid == -1) {
         perror("fork:");
         return -1;
@@ -164,25 +94,8 @@ int fork_exec(command_t command, char *args[]) {
         // we are the child
         // check io redirection
         if (command.redirect.redirect) {
+            int return_value = do_redirect_stuff(command);
 
-            int append = 0;
-            int return_value = 0;
-            // out redirection
-            if (command.redirect.great) {
-                char *redir = command.redirect.great;
-                if (strcmp(redir, ">>") == 0)
-                    append = 1;
-                return_value = redirect(command.redirect.from,
-                                        command.redirect.to, append);
-                if (return_value < 0)
-                    return -1;
-            }
-
-            //in redirection
-            if (command.redirect.less) {
-                return_value = redirect(command.redirect.from,
-                                        command.redirect.to, 0);
-            }
             if (return_value == 0) {
                 execvp(command.current_command, args);
                 perror(command.current_command);
@@ -199,6 +112,28 @@ int fork_exec(command_t command, char *args[]) {
             return 0;
         }
     }
+}
+
+int do_redirect_stuff(command_t command) {
+    int append = 0;
+    int return_value = 0;
+    // out redirection
+    if (command.redirect.great) {
+        char *redir = command.redirect.great;
+        if (strcmp(redir, ">>") == 0)
+            append = 1;
+        return_value = redirect(command.redirect.from,
+                                command.redirect.to, append);
+        if (return_value < 0)
+            return -1;
+    }
+
+    //in redirection
+    if (command.redirect.less) {
+        return_value = redirect(command.redirect.from,
+                                command.redirect.to, 0);
+    }
+    return return_value;
 }
 
 
@@ -320,4 +255,8 @@ char *concat(const char *s1, const char *s2) {
         perror("malloc");
         return NULL;
     }
+}
+
+void sig_handler(int sig_num) {
+    //just catch signal
 }

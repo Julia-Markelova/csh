@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <signal.h>
 #include "utils.h"
 
 //DECLARE
@@ -40,9 +41,8 @@ int yywrap() {
 }
 
 int main(int argc, char **argv) {
-
+    if (argv[1] != NULL) {
         if (strcmp(argv[1], "-") == 0){
-
 
             while (TRUE){
                 char * prompt = concat(getenv("USER"), ":");
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
                 print_msg(1, prompt);
                 char string[128] = {0};
-
+                signal(SIGINT, sig_handler);
                 if(read(0, string, 128) < 0)
                      perror("read syscall");
 
@@ -64,7 +64,11 @@ int main(int argc, char **argv) {
 
         else {
             char * string;
-            for (int i = 1; i < argc; i++) {
+            printf("%d\n", argc);
+
+            printf("%s arg\n",argv[1]);
+            string = concat(argv[1], " ");
+            for (int i = 2; i < argc; i++) {
                 string = concat(string, argv[i]);
                 string = concat(string, " ");
             }
@@ -72,8 +76,12 @@ int main(int argc, char **argv) {
             yyparse();
             yy_delete_buffer(buffer);
             return 0;
-        }
 
+        }
+    } else{
+        print_msg(1, "No arguments passed.\n");
+        exit(0);
+    }
 }
 
 %}
@@ -100,6 +108,8 @@ int main(int argc, char **argv) {
 %type <cmd> PIPE_LIST
 %type <cmd> CMD_ARGS COMMAND COMMANDS EXPR COMMAND_LIST
 
+
+
 %%
 
 // RULES
@@ -110,7 +120,7 @@ COMMAND_LINE:
     | /*nothing*/
 
 EXPR:
-     COMMAND_LIST PIPE_LIST NEWLINE {
+     COMMAND_LIST PIPES {
      puts("3");
      }
     | COMMAND_LIST {
@@ -118,14 +128,15 @@ EXPR:
     }
     | PIPES {
         pipeline(commands);
+        //puts("6");
         for (int k = 0; k < ARGS_SIZE; k++)
             commands[k].current_command = NULL;
         c = 0; //important!
     }
-    | COMMAND_LIST PIPE_LIST COMMAND_LIST NEWLINE {
+    | COMMAND_LIST PIPES COMMAND_LIST NEWLINE {
     puts("2");
     }
-    | PIPE_LIST COMMAND_LIST {
+    | PIPES COMMAND_LIST {
         puts("1");
 
     }
@@ -162,7 +173,6 @@ COMMANDS:
 
 REDIRECTION:
     REDIRECTS ARG{
-        puts("redir!");
         if (strcmp($1, "<") == 0) {
             command.redirect.less = $1;
             command.redirect.from = $2;

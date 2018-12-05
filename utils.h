@@ -35,6 +35,7 @@ pairs_t variables[ARGS_SIZE];
 void print_msg(int fd, char * msg);
 void open_dir(char * dir_name);
 int redirect(char* from, char * to, int append);
+int do_redirect_stuff(command_t command);
 void exec_(command_t command, char * args[]);
 int pipe_(command_t command, command_t command2);
 int pipeline(command_t commands[]);
@@ -46,4 +47,5 @@ char * find_local_variable(char * name);
 char * substitute_variable(char * arg );
 void add_variable(char * key, char * value);
 char* concat(const char *s1, const char *s2);
+void sig_handler(int sig_num);
 #endif //YULIASH_UTILS_H
