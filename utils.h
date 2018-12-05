@@ -8,8 +8,8 @@
 #define ARGS_SIZE 32
 #define TRUE 1
 #define FALSE 0
-#define PIPE_RD 0
-#define PIPE_WR 1
+#define RD_END 0
+#define WR_END 1
 
 typedef struct current_redirect{
     char * from;
@@ -37,6 +37,7 @@ void open_dir(char * dir_name);
 int redirect(char* from, char * to, int append);
 void exec_(command_t command, char * args[]);
 int pipe_(command_t command, command_t command2);
+int pipeline(command_t commands[]);
 void cd(char * dir);
 void set_(char *name);
 int fork_exec(command_t command, char * args[]);

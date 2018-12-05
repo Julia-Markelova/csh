@@ -12,79 +12,129 @@
 #include "utils.h"
 
 //TODO: >& unset? pipe ctrl+c
-pid_t waitpid(pid_t pid, int *status, int options);
+
 
 void print_msg(int fd, char *msg) {
     if (write(fd, msg, strlen(msg)) < 0)
         perror("write");
 }
 
+int pipeline(command_t commands[])
+{
+    int fd[2];
+    pid_t pid;
+    int fdd = 0;
+    int i = 0;
+
+    while (commands[i].current_command != NULL) {
+        pipe(fd);
+        if ((pid = fork()) == -1) {
+            perror("fork");
+            exit(1);
+        }
+        else if (pid == 0) {
+
+            if (dup2(fdd, 0) < 0){
+                perror(commands[i].current_command);
+                return -1;
+            }
+
+            if (commands[i+1].current_command != NULL) {
+                if (dup2(fd[1], 1) < 0) {
+                    perror(commands[i+1].current_command);
+                    return -1;
+                }
+            } else {
+                perror(commands[i].redirect.to);
+                if (commands[i].redirect.redirect) {
+                    printf("%s %d", commands[i].current_command,
+                           commands[i].redirect.redirect);
+                    int append = 0;
+                    int return_value = 0;
+                    // out redirection
+                    if (commands[i].redirect.great) {
+                        char *redir = commands[i].redirect.great;
+                        if (strcmp(redir, ">>") == 0)
+                            append = 1;
+                        return_value = redirect(commands[i].redirect.from,
+                                                commands[i].redirect.to, append);
+                        if (return_value < 0)
+                            return -1;
+                    }
+
+                    //in redirection
+                    if (commands[i].redirect.less) {
+                        return_value = redirect(commands[i].redirect.from,
+                                                commands[i].redirect.to, 0);
+                        if (return_value < 0)
+                            return -1;
+                    }
+                }
+            }
+            close(fd[0]);
+            execvp(commands[i].current_command, commands[i].args);
+            exit(1);
+        }
+        else {
+            wait(NULL);
+            close(fd[1]);
+            fdd = fd[0];
+            i++;
+        }
+    }
+}
+
+/*
 int pipe_(command_t command1, command_t command2) {
     int pipes[2];
     pid_t p1, p2;
-    p1 = fork();
 
-    if (p1 == 0) {
-        pipe(pipes);
-        fcntl(pipes[PIPE_RD], F_SETFL, O_NONBLOCK);
-
-        p2 = fork();
-        if (p2 == 0) {
-
-            dup2(pipes[PIPE_WR], STDOUT_FILENO);
-            execvp(command1.current_command, command1.args);
-        } else {
-
-            dup2(pipes[PIPE_RD], STDIN_FILENO);
-            close(STDERR_FILENO);
-            wait(NULL);
-            execvp(command2.current_command, command2.args);
-        }
-    }
-
-    return 0;
-
-/*    int fd[2];
-    pid_t child;
-    child = fork();
-
-    if (pipe(fd) < 0)
-        perror("pipe");
-
-    if (child == -1) {
+    if (pipe(pipes) < 0) {
         perror("fork");
         return -1;
     }
 
-    else if (child == 0) {
-        *//* Child process closes up input side of pipe *//*
-       *//* if (dup2(fd[0], 0) < 0)
-            perror(command2.current_command);
-
-        close(fd[1]);
-
-        execvp(command2.current_command, command2.args);
-        perror(command2.current_command);
-        return errno;*//*
-
+    p1 = fork();
+    if (p1 < 0) {
+        perror("fork");
+        return -1;
     }
-    else {
-        if (fork() == 0) {
 
-           *//* if (dup2(fd[1], 1) < 0) {
-                perror(command1.current_command);
-            }
-            close(fd[0]);
-
-            execvp(command1.current_command, command1.args);
+    if (p1 == 0) {
+        close(pipes[RD_END]);
+        if (dup2(pipes[WR_END], STDOUT_FILENO) < 0) {
             perror(command1.current_command);
-            return errno;*//*
+            return -1;
+        }
+        close(pipes[WR_END]);
+        execvp(command1.current_command, command1.args);
+        perror(command1.current_command);
+
+    } else {
+        p2 = fork();
+        if (p2 == 0) {
+            close(pipes[WR_END]);
+            if (dup2(pipes[RD_END], STDIN_FILENO) < 0) {
+                perror(command2.current_command);
+                return -1;
+            }
+            close(pipes[RD_END]);
+
+            execvp(command2.current_command, command2.args);
+            perror(command2.current_command);
 
         }
 
-        return 0;
-    }*/
+        close(pipes[RD_END]);
+        close(pipes[WR_END]);
+    }
+
+    close(pipes[RD_END]);
+    close(pipes[WR_END]);
+    return 0;
+
 }
+*/
 
 void exec_(command_t command, char *args[]) {
     char *command_name = command.current_command;
@@ -259,14 +309,14 @@ void add_variable(char *key, char *value) {
 }
 
 
-char* concat(const char *s1, const char *s2) {
+char *concat(const char *s1, const char *s2) {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
 
     if (result) {
         strcpy(result, s1);
         strcat(result, s2);
         return result;
-    } else{
+    } else {
         perror("malloc");
         return NULL;
     }

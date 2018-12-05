@@ -23,6 +23,8 @@ int yylex();
 
 command_t command;
 command_t pipe_command;
+command_t commands[ARGS_SIZE];
+size_t c = 0;
 
 size_t i = 1;
 int is_pipe = FALSE;
@@ -108,18 +110,44 @@ COMMAND_LINE:
     | /*nothing*/
 
 EXPR:
-     COMMAND_LIST PIPE_LIST NEWLINE
-    | COMMAND_LIST
-    | PIPE_LIST
+     COMMAND_LIST PIPE_LIST NEWLINE {
+     puts("3");
+     }
+    | COMMAND_LIST {
+    puts("4");
+    }
+    | PIPES {
+        pipeline(commands);
+        for (int k = 0; k < ARGS_SIZE; k++)
+            commands[k].current_command = NULL;
+        c = 0; //important!
+    }
+    | COMMAND_LIST PIPE_LIST COMMAND_LIST NEWLINE {
+    puts("2");
+    }
+    | PIPE_LIST COMMAND_LIST {
+        puts("1");
+
+    }
     | NEWLINE
 
+PIPES:
+    PIPE_LIST REDIRECTION
 
 PIPE_LIST:
-    PIPE_LIST PIPE CMD_ARGS
-    | CMD_ARGS PIPE CMD_ARGS {
-       printf("cmd1: %s; cmd2: %s \n", $1.current_command,
-              $3.current_command);
-       pipe_($1, $3);
+     PIPE_LIST PIPE CMD_ARGS {
+        commands[c] = $3;
+        c++;
+        is_pipe = TRUE;
+    }
+    | CMD_ARGS  {
+        if (c < ARGS_SIZE) {
+            commands[c] = $1;
+            c++;
+
+        }
+        else
+            print_msg(2, "Too many pipes.\n");
     }
 
 COMMAND_LIST:
@@ -134,6 +162,7 @@ COMMANDS:
 
 REDIRECTION:
     REDIRECTS ARG{
+        puts("redir!");
         if (strcmp($1, "<") == 0) {
             command.redirect.less = $1;
             command.redirect.from = $2;
@@ -143,6 +172,8 @@ REDIRECTION:
             command.redirect.to = $2;
         }
         command.redirect.redirect = TRUE;
+        if (is_pipe)
+            commands[c] = command;
     }
     |REDIRECTION REDIRECTS ARG{
         if (strcmp($2, "<") == 0) {
@@ -190,6 +221,7 @@ COMMAND:
         command.redirect.redirect = FALSE;
         for (int k = 1; k < ARGS_SIZE; k++)
              command.args[k] = NULL;
+        i = 1;
     }
     | WORD EQUALS WORD{
        add_variable($1, $3);
