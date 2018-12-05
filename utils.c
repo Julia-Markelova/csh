@@ -203,6 +203,12 @@ void cd(char *dir) {
     }
     if (chdir(dir) != 0)
         perror(dir);
+
+    char cwd[128];
+    if (getcwd(cwd, sizeof(cwd)) < 0)
+        perror("set pwd");
+    else
+        setenv("PWD", cwd, 1);
 }
 
 void set_(char *name) {
@@ -252,3 +258,16 @@ void add_variable(char *key, char *value) {
     variables[i].value = value;
 }
 
+
+char* concat(const char *s1, const char *s2) {
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+
+    if (result) {
+        strcpy(result, s1);
+        strcat(result, s2);
+        return result;
+    } else{
+        perror("malloc");
+        return NULL;
+    }
+}

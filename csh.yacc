@@ -10,6 +10,9 @@
 
 //DECLARE
 //----------------------------------------------------------------------------------
+typedef struct yy_buffer_state * YY_BUFFER_STATE;
+extern YY_BUFFER_STATE yy_scan_string(char * str);
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 int yyparse();
 int yylex();
 
@@ -34,10 +37,41 @@ int yywrap() {
     return 1;
 }
 
-int main() {
+int main(int argc, char **argv) {
 
-        yyparse();
-        return 0;
+        if (strcmp(argv[1], "-") == 0){
+
+
+            while (TRUE){
+                char * prompt = concat(getenv("USER"), ":");
+                prompt = concat(prompt, getenv("PWD"));
+                prompt = concat(prompt, "> ");
+
+
+                print_msg(1, prompt);
+                char string[128] = {0};
+
+                if(read(0, string, 128) < 0)
+                     perror("read syscall");
+
+                YY_BUFFER_STATE buffer = yy_scan_string(string);
+                yyparse();
+                yy_delete_buffer(buffer);
+            }
+        }
+
+        else {
+            char * string;
+            for (int i = 1; i < argc; i++) {
+                string = concat(string, argv[i]);
+                string = concat(string, " ");
+            }
+            YY_BUFFER_STATE buffer = yy_scan_string(string);
+            yyparse();
+            yy_delete_buffer(buffer);
+            return 0;
+        }
+
 }
 
 %}
