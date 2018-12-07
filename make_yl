@@ -1,6 +1,9 @@
 rm -rf lex.yy.c y.tab.c y.tab.h;
-yacc -ggdb3 -d csh.yacc &&
+yacc -d csh.yacc &&
 lex csh.lex &&
-cc -ggdb3 lex.yy.c y.tab.c utils.c -o my_csh
+cc  -ggdb3 -Wall -Wextra --std=gnu99 -pedantic -Werror -c utils.c
+cc  -ggdb3 -c lex.yy.c y.tab.c &&
+gcc -ggdb3 -o my_csh lex.yy.o y.tab.o utils.o
+rm *.o
 # ./my_csh
 

@@ -47,5 +47,5 @@ char * find_local_variable(char * name);
 char * substitute_variable(char * arg );
 void add_variable(char * key, char * value);
 char* concat(const char *s1, const char *s2);
-void sig_handler(int sig_num);
+void sig_handler();
 #endif //YULIASH_UTILS_H

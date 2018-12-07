@@ -62,6 +62,7 @@ int pipeline(command_t commands[]) {
             }
         }
     }
+    return 0;
 }
 
 
@@ -83,7 +84,6 @@ void exec_(command_t command, char *args[]) {
 
 int fork_exec(command_t command, char *args[]) {
     pid_t pid = fork();
-    PROCESS_ID = getpid();
     if (pid == -1) {
         perror("fork:");
         return -1;
@@ -107,11 +107,12 @@ int fork_exec(command_t command, char *args[]) {
 
             if (execvp(command.current_command, args)) {
                 perror(command.current_command);
-                return -1;
+                exit(EXIT_FAILURE);
             }
             return 0;
         }
     }
+    return 0;
 }
 
 int do_redirect_stuff(command_t command) {
@@ -141,7 +142,7 @@ int redirect(char *from, char *to, int append) {
     int in;
     int out;
 
-    printf("from %s to %s\n", from, to);
+    //printf("from %s to %s\n", from, to);
 
     // check if there any file as stdin
     if (from) {
@@ -190,7 +191,7 @@ void cd(char *dir) {
         perror(dir);
 
     char cwd[128];
-    if (getcwd(cwd, sizeof(cwd)) < 0)
+    if (!getcwd(cwd, sizeof(cwd)))
         perror("set pwd");
     else
         setenv("PWD", cwd, 1);
@@ -246,7 +247,6 @@ void add_variable(char *key, char *value) {
 
 char *concat(const char *s1, const char *s2) {
     char *result = malloc(strlen(s1) + strlen(s2) + 1);
-
     if (result) {
         strcpy(result, s1);
         strcat(result, s2);
@@ -257,6 +257,7 @@ char *concat(const char *s1, const char *s2) {
     }
 }
 
-void sig_handler(int sig_num) {
+void sig_handler() {
     //just catch signal
 }
+

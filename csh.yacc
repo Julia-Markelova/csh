@@ -42,7 +42,7 @@ int yywrap() {
 
 int main(int argc, char **argv) {
     if (argv[1] != NULL) {
-        if (strcmp(argv[1], "-") == 0){
+        if (strcmp((char *)argv[1], "-") == 0){
 
             while (TRUE){
                 char * prompt = concat(getenv("USER"), ":");
@@ -64,9 +64,6 @@ int main(int argc, char **argv) {
 
         else {
             char * string;
-            printf("%d\n", argc);
-
-            printf("%s arg\n",argv[1]);
             string = concat(argv[1], " ");
             for (int i = 2; i < argc; i++) {
                 string = concat(string, argv[i]);
@@ -89,8 +86,8 @@ int main(int argc, char **argv) {
 // TOKENS
 //----------------------------------------------------------------------------------
 
-%token NUMBER WORD NEWLINE SEMICOLON VARIABLE
-%token EQUALS GREAT LESS GREAT_GREAT GREAT_AMP
+%token NUMBER WORD NEWLINE VARIABLE
+%token EQUALS GREAT LESS GREAT_GREAT
 %token REDIRECT PIPE
 
 %union {
@@ -102,8 +99,8 @@ int main(int argc, char **argv) {
 
 %type <number> NUMBER
 %type <sign> EQUALS PIPE
-%type <str> WORD VARIABLE NEWLINE SEMICOLON
-%type <str> GREAT LESS GREAT_GREAT GREAT_AMP REDIRECTS REDIRECTION
+%type <str> WORD VARIABLE NEWLINE
+%type <str> GREAT LESS GREAT_GREAT REDIRECTS REDIRECTION
 %type <str> ARG
 %type <cmd> PIPE_LIST
 %type <cmd> CMD_ARGS COMMAND COMMANDS EXPR COMMAND_LIST
@@ -120,26 +117,16 @@ COMMAND_LINE:
     | /*nothing*/
 
 EXPR:
-     COMMAND_LIST PIPES {
-     puts("3");
-     }
-    | COMMAND_LIST {
-    puts("4");
-    }
+     COMMAND_LIST PIPES
+    | COMMAND_LIST
     | PIPES {
         pipeline(commands);
-        //puts("6");
         for (int k = 0; k < ARGS_SIZE; k++)
             commands[k].current_command = NULL;
         c = 0; //important!
     }
-    | COMMAND_LIST PIPES COMMAND_LIST NEWLINE {
-    puts("2");
-    }
-    | PIPES COMMAND_LIST {
-        puts("1");
-
-    }
+    | COMMAND_LIST PIPES COMMAND_LIST NEWLINE
+    | PIPES COMMAND_LIST
     | NEWLINE
 
 PIPES:
@@ -197,22 +184,12 @@ REDIRECTION:
         command.redirect.redirect = TRUE;
     }
     |/*nothing*/
-/*    |NUMBER GREAT_AMP ARG{
-        command.redirect.from = (char *)$1;
-        command.redirect.great = $2;
-        command.redirect.to = $3;
-    }
-    |NUMBER GREAT_AMP NUMBER{
-         command.redirect.from = (char *)$1;
-         command.redirect.great = $2;
-         command.redirect.to = (char *)$3;
-    } */
+
 
 REDIRECTS:
     GREAT
     |LESS
     |GREAT_GREAT
-    |GREAT_AMP
 
 CMD_ARGS:
     COMMAND ARGS{
@@ -230,13 +207,27 @@ COMMAND:
         command.redirect.to = NULL;
         command.redirect.redirect = FALSE;
         for (int k = 1; k < ARGS_SIZE; k++)
-             command.args[k] = NULL;
+            command.args[k] = NULL;
         i = 1;
     }
     | WORD EQUALS WORD{
        add_variable($1, $3);
        command.current_command = $2;
        command.args[0] = command.current_command;
+    }
+    | NUMBER{
+        char str[12];
+        sprintf(str, "%d", $1);
+        command.current_command = str;
+        command.args[0] = command.current_command;
+        command.redirect.great = NULL;
+        command.redirect.less = NULL;
+        command.redirect.from = NULL;
+        command.redirect.to = NULL;
+        command.redirect.redirect = FALSE;
+        for (int k = 1; k < ARGS_SIZE; k++)
+            command.args[k] = NULL;
+        i = 1;
     }
 
 ARGS:
