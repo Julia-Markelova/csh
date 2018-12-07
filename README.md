@@ -1,5 +1,5 @@
 # csh
-## Simple shell realisatoin with _yacc_, _lex_ and _C_
+## Simple shell implementation with _yacc_, _lex_ and _C_
 
 * Builtin commands:
   ```cd```, ```export```, ```exit```, ```help```, ```history```.
