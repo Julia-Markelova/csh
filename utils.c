@@ -17,16 +17,19 @@ void print_msg(int fd, char *msg) {
 }
 
 void print_help() {
-    print_msg(1, "-Builtin commands:\n");
-    print_msg(1, " > cd, export, exit.\n");
+    print_msg(1, "\x1b[35;5m -Builtin commands:\n");
+    print_msg(1, " > \x1b[4mcd\x1b[24m, \x1b[4mexport\x1b[24m, \x1b[4mexit\x1b[24m, ");
+    print_msg(1, "\x1b[4mhelp\x1b[24m, \x1b[4mhistory\x1b[24m\n" );
     print_msg(1, "-Set variables:\n");
-    print_msg(1, " example:\n > a = b\n > export a\n > echo $a\n > b\n");
+    print_msg(1, " \x1b[1mexample:\x1b[0m\n \x1b[35;4m> a=b\x1b[24m\n ");
+    print_msg(1, "\x1b[35;4m> export a\x1b[24m\n \x1b[35;4m> echo $a\x1b[24m\n ");
+    print_msg(1, "\x1b[4m> b\x1b[24m\n");
     print_msg(1, "-Pipe support\n");
     print_msg(1, "-IO redirection only with file names\n");
     print_msg(1, "-Print errors\n");
     print_msg(1, "-Save 5 recent commands, ");
-    print_msg(1, "to see print 'history' or !n, where n [1;5].\n");
-    print_msg(1, "If want to see it again print 'help'\n");
+    print_msg(1, "to see print '\x1b[4mhistory\x1b[24m' or \x1b[4m!n\x1b[24m, where n [1;5].\n");
+    print_msg(1, "If want to see it again print '\x1b[4mhelp\x1b[24m'\x1b[0m \n");
 }
 
 int pipeline(command_t commands[]) {

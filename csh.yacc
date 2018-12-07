@@ -48,8 +48,12 @@ int main(int argc, char **argv) {
             history_stack.pointer = -1;
 
             while (TRUE){
-                char * prompt = concat(getenv("USER"), ":");
+                char * prompt = concat("\x1b[32;1m", getenv("USER"));
+                prompt = concat(prompt, "\033[0m");
+                prompt = concat(prompt, ":");
+                prompt = concat(prompt, "\x1b[34;1m");
                 prompt = concat(prompt, getenv("PWD"));
+                prompt = concat(prompt, "\033[0m");
                 prompt = concat(prompt, "> ");
                 print_msg(1, prompt);
                 char * string = malloc(sizeof(char) * 128);
