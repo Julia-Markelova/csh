@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/wait.h>
@@ -181,7 +182,7 @@ int redirect(char *from, char *to, int append) {
 
     // check if there any file as stdout
     if (to) {
-        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        mode_t mode = 0666;
 
         // check for append flag
         if (append == 1)

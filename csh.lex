@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <string.h>
 #include "utils.h"
 #include "y.tab.h"
 %}
@@ -7,7 +8,7 @@
 [0-9]+                  yylval.number = atoi(yytext); return NUMBER;
 "|"                     yylval.sign = strdup(yytext); return PIPE;
 "="                     yylval.sign = strdup(yytext); return EQUALS;
-[a-zA-Z/_.-]+           yylval.str = strdup(yytext); return WORD;
+[a-zA-Z0-9/_.-]+        yylval.str = strdup(yytext); return WORD;
 "!"                     yylval.sign = strdup(yytext); return HISTORY;
 [$][a-zA-Z0-9_]+        yylval.str = strdup(yytext); return VARIABLE;
 ">"                     yylval.str = strdup(yytext); return GREAT;
@@ -16,3 +17,9 @@
 \n                      return NEWLINE;
 [ \t]+                  /* игнорируем пробелы и символы табуляции */;
 %%
+
+void parse(char * string){
+	YY_BUFFER_STATE buffer = yy_scan_string(string);
+	yyparse();
+	yy_delete_buffer(buffer);
+}

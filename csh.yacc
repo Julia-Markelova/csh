@@ -11,12 +11,12 @@
 
 //DECLARE
 //----------------------------------------------------------------------------------
-typedef struct yy_buffer_state * YY_BUFFER_STATE;
-extern YY_BUFFER_STATE yy_scan_string(char * str);
-extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
+//typedef struct yy_buffer_state * YY_BUFFER_STATE;
+//extern YY_BUFFER_STATE yy_scan_string(char * str);
+//extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 int yyparse();
 int yylex();
-
+void parse(char * string);
 //----------------------------------------------------------------------------------
 
 // VARIABLES
@@ -78,9 +78,10 @@ int main(int argc, char **argv) {
                         string = "\n";
                     }
 
-                    YY_BUFFER_STATE buffer = yy_scan_string(string);
-                    yyparse();
-                    yy_delete_buffer(buffer);
+                    //YY_BUFFER_STATE buffer = yy_scan_string(string);
+                    //yyparse();
+                    //yy_delete_buffer(buffer);
+					parse(string);
                 }
                 else {
                     perror("memory");
@@ -95,9 +96,10 @@ int main(int argc, char **argv) {
                 string = concat(string, argv[i]);
                 string = concat(string, " ");
             }
-            YY_BUFFER_STATE buffer = yy_scan_string(string);
-            yyparse();
-            yy_delete_buffer(buffer);
+            //YY_BUFFER_STATE buffer = yy_scan_string(string);
+           // yyparse();
+           // yy_delete_buffer(buffer);
+			parse(string);
             return 0;
 
         }
@@ -109,8 +111,8 @@ int main(int argc, char **argv) {
 
 %}
 
-// TOKENS
-//----------------------------------------------------------------------------------
+/* TOKENS
+----------------------------------------------------------------------------------*/
 
 %token NUMBER WORD NEWLINE VARIABLE
 %token EQUALS GREAT LESS GREAT_GREAT
@@ -126,17 +128,17 @@ int main(int argc, char **argv) {
 %type <number> NUMBER
 %type <sign> EQUALS PIPE HISTORY
 %type <str> WORD VARIABLE NEWLINE
-%type <str> GREAT LESS GREAT_GREAT REDIRECTS REDIRECTION
-%type <str> ARG
-%type <cmd> PIPE_LIST
-%type <cmd> CMD_ARGS COMMAND COMMANDS EXPR COMMAND_LIST
+%type <str> GREAT LESS GREAT_GREAT REDIRECTS 
+%type <str> ARG 
+%type <cmd> PIPE_LIST PIPES
+%type <cmd> CMD_ARGS COMMAND COMMANDS COMMAND_LIST
 
 
 
 %%
 
-// RULES
-//------------------------------------------------------------------------------------
+/* RULES
+------------------------------------------------------------------------------------*/
 
 COMMAND_LINE:
     EXPR COMMAND_LINE
@@ -153,10 +155,10 @@ EXPR:
     }
     | COMMAND_LIST PIPES COMMAND_LIST NEWLINE
     | PIPES COMMAND_LIST
-    | NEWLINE
+    | NEWLINE 
 
 PIPES:
-    PIPE_LIST REDIRECTION
+    PIPE_LIST REDIRECTION 
 
 PIPE_LIST:
      PIPE_LIST PIPE CMD_ARGS {
@@ -255,6 +257,19 @@ COMMAND:
             command.args[k] = NULL;
         i = 1;
     }
+	| VARIABLE {
+		command.current_command = substitute_variable($1);;
+        command.args[0] = command.current_command;
+        command.redirect.great = NULL;
+        command.redirect.less = NULL;
+        command.redirect.from = NULL;
+        command.redirect.to = NULL;
+        command.redirect.redirect = FALSE;
+        for (int k = 1; k < ARGS_SIZE; k++)
+            command.args[k] = NULL;
+        i = 1;
+
+	}
     | HISTORY {
         command.current_command = $1;
     }
@@ -277,7 +292,7 @@ ARGS:
             i++;
         }
     }
-    | /*nothing*/
+    |/* nothing*/
 
 
 ARG:
@@ -290,4 +305,3 @@ ARG:
         sprintf(str, "%d", $1);
         $$ = str;
     }
-
