@@ -8,6 +8,7 @@
 "|"                     yylval.sign = strdup(yytext); return PIPE;
 "="                     yylval.sign = strdup(yytext); return EQUALS;
 [a-zA-Z/_.-]+           yylval.str = strdup(yytext); return WORD;
+"!"                     yylval.sign = strdup(yytext); return HISTORY;
 [$][a-zA-Z0-9_]+        yylval.str = strdup(yytext); return VARIABLE;
 ">"                     yylval.str = strdup(yytext); return GREAT;
 "<"                     yylval.str = strdup(yytext); return LESS;

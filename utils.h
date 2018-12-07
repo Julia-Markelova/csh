@@ -6,46 +6,60 @@
 #define YULIASH_UTILS_H
 
 #define ARGS_SIZE 32
+#define HISTORY_SIZE 5
 #define TRUE 1
 #define FALSE 0
+
 #define RD_END 0
 #define WR_END 1
 
-typedef struct current_redirect{
-    char * from;
-    char * to;
-    char * great;
-    char * less;
+typedef struct current_redirect {
+    char *from;
+    char *to;
+    char *great;
+    char *less;
     int redirect;
 } redirect_t;
 
 typedef struct current_command {
-    char * current_command;
+    char *current_command;
     redirect_t redirect;
-    char * args[ARGS_SIZE];
+    char *args[ARGS_SIZE];
 } command_t;
 
-typedef struct key_value{
-    char * key;
-    char * value;
+typedef struct key_value {
+    char *key;
+    char *value;
 } pairs_t;
 
-pairs_t variables[ARGS_SIZE];
+typedef struct stack_history {
+    char * prev_cmd[HISTORY_SIZE];
+    int pointer;
+} history_stack_t;
 
-void print_msg(int fd, char * msg);
-void open_dir(char * dir_name);
-int redirect(char* from, char * to, int append);
+history_stack_t history_stack;
+void push(char * cmd);
+char* pop(int index);
+
+pairs_t variables[ARGS_SIZE];
+void print_msg(int fd, char *msg);
+void open_dir(char *dir_name);
+int redirect(char *from, char *to, int append);
 int do_redirect_stuff(command_t command);
-void exec_(command_t command, char * args[]);
+void exec_(command_t command, char *args[]);
 int pipe_(command_t command, command_t command2);
 int pipeline(command_t commands[]);
-void cd(char * dir);
+void cd(char *dir);
 void set_(char *name);
-int fork_exec(command_t command, char * args[]);
-void slice_str(const char * str, char * buffer, size_t start, size_t end);
-char * find_local_variable(char * name);
-char * substitute_variable(char * arg );
-void add_variable(char * key, char * value);
-char* concat(const char *s1, const char *s2);
+int fork_exec(command_t command, char *args[]);
+void slice_str(const char *str, char *buffer, size_t start, size_t end);
+char *find_local_variable(char *name);
+char *substitute_variable(char *arg);
+void add_variable(char *key, char *value);
+char *concat(const char *s1, const char *s2);
 void sig_handler();
+void print_help();
+char* check_history(char * string);
+void array_rotate_left(char **array, int size);
+void trim(char *s);
 #endif //YULIASH_UTILS_H

@@ -16,6 +16,19 @@ void print_msg(int fd, char *msg) {
         perror("write");
 }
 
+void print_help() {
+    print_msg(1, "-Builtin commands:\n");
+    print_msg(1, " > cd, export, exit.\n");
+    print_msg(1, "-Set variables:\n");
+    print_msg(1, " example:\n > a = b\n > export a\n > echo $a\n > b\n");
+    print_msg(1, "-Pipe support\n");
+    print_msg(1, "-IO redirection only with file names\n");
+    print_msg(1, "-Print errors\n");
+    print_msg(1, "-Save 5 recent commands, ");
+    print_msg(1, "to see print 'history' or !n, where n [1;5].\n");
+    print_msg(1, "If want to see it again print 'help'\n");
+}
+
 int pipeline(command_t commands[]) {
     int fd[2];
     pid_t pid;
@@ -77,6 +90,13 @@ void exec_(command_t command, char *args[]) {
         //do nothing
     } else if (strcmp(command_name, "exit") == 0) {
         exit(0);
+    } else if (strcmp(command_name, "help") == 0) {
+        print_help();
+    } else if (strcmp(command_name, "history") == 0) {
+        for (int i = 0; i < HISTORY_SIZE; i++) {
+            if (history_stack.prev_cmd[i])
+                print_msg(1, history_stack.prev_cmd[i]);
+        }
     } else {
         fork_exec(command, args);
     }
@@ -261,3 +281,67 @@ void sig_handler() {
     //just catch signal
 }
 
+
+void push(char *cmd) {
+    trim(cmd);
+    if (strcmp(cmd, "\n") == 0)
+        return;
+    if (history_stack.pointer == HISTORY_SIZE - 1) {
+        history_stack.pointer = 0;
+        history_stack.prev_cmd[history_stack.pointer] = cmd;
+        array_rotate_left(history_stack.prev_cmd, 5);
+    } else {
+        history_stack.pointer++;
+        history_stack.prev_cmd[history_stack.pointer] = cmd;
+    }
+}
+
+char *pop(int index) {
+    return history_stack.prev_cmd[index];
+}
+
+char *check_history(char *string) {
+    if (strcmp(string, "!\n") == 0 || strcmp(string, "!1\n") == 0)
+        return pop(history_stack.pointer);
+    if (strcmp(string, "!2\n") == 0)
+        return pop(history_stack.pointer - 1 > -1 ? history_stack.pointer - 1 : 4);
+    if (strcmp(string, "!3\n") == 0)
+        return pop(history_stack.pointer - 2 > -1 ? history_stack.pointer - 2 : 4);
+    if (strcmp(string, "!4\n") == 0)
+        return pop(history_stack.pointer - 3 > -1 ? history_stack.pointer - 3 : 4);
+    if (strcmp(string, "!5\n") == 0)
+        return pop(history_stack.pointer - 4 > -1 ? history_stack.pointer - 4 : 4);
+    else return string;
+}
+
+
+void array_rotate_left(char **array, int size) {
+    register int i;
+    char *temp = array[0];
+    for (i = 0, size--; i < size; i++) array[i] = array[i + 1];
+    array[size] = temp;
+}
+
+
+void trim(char *s) {
+    // удаляем пробелы и табы с начала строки:
+    size_t i = 0, j;
+    while ((s[i] == ' ') || (s[i] == '\t')) {
+        i++;
+    }
+    if (i > 0) {
+        for (j = 0; j < strlen(s); j++) {
+            s[j] = s[j + i];
+        }
+        s[j] = '\0';
+    }
+
+    // удаляем пробелы и табы с конца строки:
+    i = strlen(s) - 1;
+    while ((s[i] == ' ') || (s[i] == '\t')) {
+        i--;
+    }
+    if (i < (strlen(s) - 1)) {
+        s[i + 1] = '\0';
+    }
+}

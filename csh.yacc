@@ -44,21 +44,43 @@ int main(int argc, char **argv) {
     if (argv[1] != NULL) {
         if (strcmp((char *)argv[1], "-") == 0){
 
+            print_help();
+            history_stack.pointer = -1;
+
             while (TRUE){
                 char * prompt = concat(getenv("USER"), ":");
                 prompt = concat(prompt, getenv("PWD"));
                 prompt = concat(prompt, "> ");
-
-
                 print_msg(1, prompt);
-                char string[128] = {0};
-                signal(SIGINT, sig_handler);
-                if(read(0, string, 128) < 0)
-                     perror("read syscall");
+                char * string = malloc(sizeof(char) * 128);
 
-                YY_BUFFER_STATE buffer = yy_scan_string(string);
-                yyparse();
-                yy_delete_buffer(buffer);
+                if (string) {
+                    signal(SIGINT, sig_handler);
+
+                    if(read(0, string, 128) < 0)
+                         perror("read syscall");
+
+                    char * hist = check_history(string);
+                    if (hist != NULL) {
+                        if (strcmp(hist, string) != 0) {
+                            print_msg(1, hist);
+                            string = hist;
+                        }
+                        else
+                            push(string);
+                    }
+                    else {
+                        print_msg(2, "No prev command.\n");
+                        string = "\n";
+                    }
+
+                    YY_BUFFER_STATE buffer = yy_scan_string(string);
+                    yyparse();
+                    yy_delete_buffer(buffer);
+                }
+                else {
+                    perror("memory");
+                }
             }
         }
 
@@ -88,7 +110,7 @@ int main(int argc, char **argv) {
 
 %token NUMBER WORD NEWLINE VARIABLE
 %token EQUALS GREAT LESS GREAT_GREAT
-%token REDIRECT PIPE
+%token REDIRECT PIPE HISTORY
 
 %union {
     char * str;
@@ -98,7 +120,7 @@ int main(int argc, char **argv) {
 }
 
 %type <number> NUMBER
-%type <sign> EQUALS PIPE
+%type <sign> EQUALS PIPE HISTORY
 %type <str> WORD VARIABLE NEWLINE
 %type <str> GREAT LESS GREAT_GREAT REDIRECTS REDIRECTION
 %type <str> ARG
@@ -229,6 +251,9 @@ COMMAND:
             command.args[k] = NULL;
         i = 1;
     }
+    | HISTORY {
+        command.current_command = $1;
+    }
 
 ARGS:
     ARGS ARG {
@@ -255,5 +280,10 @@ ARG:
     WORD
     | VARIABLE {
         $$ = substitute_variable($1);
+    }
+    | NUMBER {
+        char str[12];
+        sprintf(str, "%d", $1);
+        $$ = str;
     }
 
