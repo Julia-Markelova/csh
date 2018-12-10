@@ -1,0 +1,159 @@
+7973:	execve("my_csh", 0x08047A84, 0x08047A90)  argc = 2
+7973:	sysinfo(SI_MACHINE, "i86pc", 257)		= 6
+7973:	mmap(0x00000000, 32, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANON, -1, 0) = 0xFEFF0000
+7973:	mmap(0x00000000, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0) = 0xFEFB0000
+7973:	mmap(0x00000000, 4096, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0) = 0xFEFA0000
+7973:	memcntl(0xFEFBE000, 13608, MC_ADVISE, MADV_WILLNEED, 0, 0) = 0
+7973:	mmap(0x00000000, 4096, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANON, -1, 0) = 0xFEF90000
+7973:	memcntl(0x08050000, 5760, MC_ADVISE, MADV_WILLNEED, 0, 0) = 0
+7973:	resolvepath("/usr/lib/ld.so.1", "/lib/ld.so.1", 1023) = 12
+7973:	getcwd("/home/s225069/osp/lab4/shell_directory/csh", 1016) = 0
+7973:	resolvepath("/home/s225069/osp/lab4/shell_directory/csh/my_csh", "/home/s225069/osp/lab4/shell_directory/csh/my_csh", 1023) = 49
+7973:	stat64("/home/s225069/osp/lab4/shell_directory/csh/my_csh", 0x08047670) = 0
+7973:	open("/var/ld/ld.config", O_RDONLY)		Err#2 ENOENT
+7973:	stat64("/usr/ccs/lib/libc.so.1", 0x08046F20)	Err#2 ENOENT
+7973:	stat64("/lib/libc.so.1", 0x08046F20)		= 0
+7973:	resolvepath("/lib/libc.so.1", "/lib/libc.so.1", 1023) = 14
+7973:	open("/lib/libc.so.1", O_RDONLY)		= 3
+7973:	mmap(0x00010000, 32768, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_ALIGN, 3, 0) = 0xFEF80000
+7973:	mmap(0x00010000, 1155072, PROT_NONE, MAP_PRIVATE|MAP_NORESERVE|MAP_ANON|MAP_ALIGN, -1, 0) = 0xFEE60000
+7973:	mmap(0xFEE60000, 1110869, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_TEXT, 3, 0) = 0xFEE60000
+7973:	mmap(0xFEF70000, 30407, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_INITDATA, 3, 1114112) = 0xFEF70000
+7973:	mmap(0xFEF78000, 4352, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_FIXED|MAP_ANON, -1, 0) = 0xFEF78000
+7973:	munmap(0xFEF80000, 32768)			= 0
+7973:	close(3)					= 0
+7973:	mmap(0x00000000, 12288, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANON, -1, 0) = 0xFEF80000
+7973:	memcntl(0xFEE60000, 124760, MC_ADVISE, MADV_WILLNEED, 0, 0) = 0
+7973:	sysconfig(_CONFIG_PAGESIZE)			= 4096
+7973:	mmap(0x00010000, 24576, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_PRIVATE|MAP_ANON|MAP_ALIGN, -1, 0) = 0xFEE50000
+7973:	getcontext(0x080474E0)
+7973:	getrlimit(RLIMIT_STACK, 0x080474D8)		= 0
+7973:	getpid()					= 7973 [7971]
+7973:	lwp_private(0, 1, 0xFEE52A00)			= 0x000001C3
+7973:	setustack(0xFEE52A60)
+7973:	sysi86(SI86FPSTART, 0xFEF787B0, 0x0000133F, 0x00001F80) = 0x00000001
+7973:	write(1, 0x0805553A, 27)			= 27
+7973:	  1B [ 3 5 ; 5 m   - B u i l t i n   c o m m a n d s :\n
+7973:	write(1, 0x08055558, 48)			= 48
+7973:	     >  1B [ 4 m c d1B [ 2 4 m ,  1B [ 4 m e x p o r t1B [ 2 4 m ,
+7973:	    1B [ 4 m e x i t1B [ 2 4 m ,  
+7973:	write(1, 0x0805558C, 32)			= 32
+7973:	  1B [ 4 m h e l p1B [ 2 4 m ,  1B [ 4 m h i s t o r y1B [ 2 4 m\n
+7973:	write(1, 0x080555AD, 16)			= 16
+7973:	   - S e t   v a r i a b l e s :\n
+7973:	write(1, 0x080555C0, 38)			= 38
+7973:	    1B [ 1 m e x a m p l e :1B [ 0 m\n  1B [ 3 5 ; 4 m >   a = b1B
+7973:	   [ 2 4 m\n  
+7973:	write(1, 0x080555E8, 47)			= 47
+7973:	  1B [ 3 5 ; 4 m >   e x p o r t   a1B [ 2 4 m\n  1B [ 3 5 ; 4 m >
+7973:	     e c h o   $ a1B [ 2 4 m\n  
+7973:	write(1, 0x08055618, 13)			= 13
+7973:	  1B [ 4 m >   b1B [ 2 4 m\n
+7973:	write(1, 0x08055626, 14)			= 14
+7973:	   - P i p e   s u p p o r t\n
+7973:	write(1, 0x08055638, 37)			= 37
+7973:	   - I O   r e d i r e c t i o n   o n l y   w i t h   f i l e   n
+7973:	   a m e s\n
+7973:	write(1, 0x0805565E, 14)			= 14
+7973:	   - P r i n t   e r r o r s\n
+7973:	write(1, 0x0805566D, 25)			= 25
+7973:	   - S a v e   5   r e c e n t   c o m m a n d s ,  
+7973:	write(1, 0x08055688, 63)			= 63
+7973:	   t o   s e e   p r i n t   '1B [ 4 m h i s t o r y1B [ 2 4 m '  
+7973:	   o r  1B [ 4 m ! n1B [ 2 4 m ,   w h e r e   n   [ 1 ; 5 ] .\n
+7973:	write(1, 0x080556C8, 51)			= 51
+7973:	   I f   w a n t   t o   s e e   i t   a g a i n   p r i n t   '1B
+7973:	   [ 4 m h e l p1B [ 2 4 m '1B [ 0 m  \n
+7973:	brk(0x0806D0B8)					= 0
+7973:	brk(0x0806F0B8)					= 0
+7973:	write(1, 0x0806E980, 74)			= 74
+7973:	  1B [ 3 2 ; 1 m s 2 2 5 0 6 91B [ 0 m :1B [ 3 4 ; 1 m / h o m e /
+7973:	   s 2 2 5 0 6 9 / o s p / l a b 4 / s h e l l _ d i r e c t o r y
+7973:	   / c s h1B [ 0 m >  
+7973:	schedctl()					= 0xFEFF3000
+7973:	sigaction(SIGINT, 0x08047970, 0x080479F0)	= 0
+7973:	read(0, 0x0806E9D8, 128)			= 128
+7973:	   / /\n / /   C r e a t e d   b y   y u l i a   o n   2 1 . 1 1 .
+7973:	   1 8 .\n / /\n\n # i n c l u d e   < u n i s t d . h >\n # i n c
+7973:	   l u d e   < m e m o r y . h >\n # i n c l u d e   < s t d l i b
+7973:	   . h >\n # i n c l u d e   < s t d i o . h >\n # i n c l u d e  
+7973:	sysconfig(_CONFIG_PAGESIZE)			= 4096
+7973:	fork1()						= 7974
+7973:	lwp_sigmask(SIG_SETMASK, 0x00000000, 0x00000000) = 0xFFBFFEFF [0x0000FFFF]
+7974:	fork1()		(returning as child ...)	= 7973
+7974:	getpid()					= 7974 [7973]
+7974:	lwp_self()					= 1
+7974:	lwp_sigmask(SIG_SETMASK, 0x00000000, 0x00000000) = 0xFFBFFEFF [0x0000FFFF]
+7974:	execve("//", 0x08065F78, 0x08047A90)		Err#13 EACCES
+7974:	write(2, " / /", 2)				= 2
+7974:	write(2, " :  ", 2)				= 2
+7974:	write(2, 0xFEF0F441, 17)			= 17
+7974:	   P e r m i s s i o n   d e n i e d
+7974:	write(2, "\n", 1)				= 1
+7974:	_exit(1)
+7973:	waitid(P_PID, 7974, 0x08047720, WEXITED|WTRAPPED) = 0
+7973:	fork1()						= 7976
+7973:	lwp_sigmask(SIG_SETMASK, 0x00000000, 0x00000000) = 0xFFBFFEFF [0x0000FFFF]
+7976:	fork1()		(returning as child ...)	= 7973
+7976:	getpid()					= 7976 [7973]
+7976:	lwp_self()					= 1
+7976:	lwp_sigmask(SIG_SETMASK, 0x00000000, 0x00000000) = 0xFFBFFEFF [0x0000FFFF]
+7976:	execve("//", 0x08065F78, 0x08047A90)		Err#13 EACCES
+7976:	write(2, " / /", 2)				= 2
+7976:	write(2, " :  ", 2)				= 2
+7976:	write(2, 0xFEF0F441, 17)			= 17
+7976:	   P e r m i s s i o n   d e n i e d
+7976:	write(2, "\n", 1)				= 1
+7976:	_exit(1)
+7973:	waitid(P_PID, 7976, 0x08047720, WEXITED|WTRAPPED) = 0
+7973:	fork1()						= 7978
+7973:	lwp_sigmask(SIG_SETMASK, 0x00000000, 0x00000000) = 0xFFBFFEFF [0x0000FFFF]
+7978:	fork1()		(returning as child ...)	= 7973
+7978:	getpid()					= 7978 [7973]
+7978:	lwp_self()					= 1
+7978:	lwp_sigmask(SIG_SETMASK, 0x00000000, 0x00000000) = 0xFFBFFEFF [0x0000FFFF]
+7978:	execve("//", 0x08065F78, 0x08047A90)		Err#13 EACCES
+7978:	write(2, " / /", 2)				= 2
+7978:	write(2, " :  ", 2)				= 2
+7978:	write(2, 0xFEF0F441, 17)			= 17
+7978:	   P e r m i s s i o n   d e n i e d
+7978:	write(2, "\n", 1)				= 1
+7978:	_exit(1)
+7973:	waitid(P_PID, 7978, 0x08047720, WEXITED|WTRAPPED) = 0
+7973:	ioctl(1, TCGETA, 0x08047824)			= 0
+7973:	fstat64(1, 0x08047790)				= 0
+7973:	fstat64(2, 0x08046A30)				= 0
+7973:	write(2, 0x08054FE0, 14)			= 14
+7973:	  D0BED188D0B8D0B1D0BAD0B0 :  
+7973:	write(2, " s y n t a x   e r r o r", 12)	= 12
+7973:	write(2, "\n", 1)				= 1
+7973:	write(1, 0x0806EF28, 74)			= 74
+7973:	  1B [ 3 2 ; 1 m s 2 2 5 0 6 91B [ 0 m :1B [ 3 4 ; 1 m / h o m e /
+7973:	   s 2 2 5 0 6 9 / o s p / l a b 4 / s h e l l _ d i r e c t o r y
+7973:	   / c s h1B [ 0 m >  
+7973:	sigaction(SIGINT, 0x08047970, 0x080479F0)	= 0
+7973:	read(0, 0x0806EF80, 128)			= 128
+7973:	   < s t r i n g . h >\n # i n c l u d e   < f c n t l . h >\n # i
+7973:	   n c l u d e   < e r r n o . h >\n # i n c l u d e   < s y s / w
+7973:	   a i t . h >\n # i n c l u d e   " u t i l s . h "\n\n v o i d  
+7973:	   p r i n t _ m s g ( i n t   f d ,   c h a r   * m s g )   {\n  
+7973:	brk(0x0806F0B8)					= 0
+7973:	brk(0x080710B8)					= 0
+7973:	write(2, 0x08054FE0, 14)			= 14
+7973:	  D0BED188D0B8D0B1D0BAD0B0 :  
+7973:	write(2, " s y n t a x   e r r o r", 12)	= 12
+7973:	write(2, "\n", 1)				= 1
+7973:	write(1, 0x0806F0B0, 74)			= 74
+7973:	  1B [ 3 2 ; 1 m s 2 2 5 0 6 91B [ 0 m :1B [ 3 4 ; 1 m / h o m e /
+7973:	   s 2 2 5 0 6 9 / o s p / l a b 4 / s h e l l _ d i r e c t o r y
+7973:	   / c s h1B [ 0 m >  
+7973:	sigaction(SIGINT, 0x08047970, 0x080479F0)	= 0
+7973:	read(0, 0x0806F108, 128)			= 128
+7973:	         i f   ( w r i t e ( f d ,   m s g ,   s t r l e n ( m s g
+7973:	   ) )   <   0 )\n                 p e r r o r ( " w r i t e " ) ;
+7973:	  \n }\n\n v o i d   p r i n t _ h e l p ( )   {\n         p r i n
+7973:	   t _ m s g ( 1 ,   " \ x 1 b [ 3 5 ; 5 m   - B u i l t i n   c o
+7973:	    Incurred fault #6, FLTBOUNDS  %pc = 0xFEEA649A
+7973:	      siginfo: SIGSEGV SEGV_MAPERR addr=0x0000000B
+7973:	    Received signal #11, SIGSEGV [default]
+7973:	      siginfo: SIGSEGV SEGV_MAPERR addr=0x0000000B

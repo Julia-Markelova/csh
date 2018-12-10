@@ -222,6 +222,10 @@ void cd(char *dir) {
 }
 
 void set_(char *name) {
+	if (!name){
+		print_msg(2,"No arg passed.\n");
+		return;
+	}
     for (size_t i = 0; i < ARGS_SIZE; i++) {
         if (variables[i].key && strcmp(variables[i].key, name) == 0) {
             if (setenv(variables[i].key, variables[i].value, 1) != 0) {

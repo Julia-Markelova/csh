@@ -11,9 +11,6 @@
 
 //DECLARE
 //----------------------------------------------------------------------------------
-//typedef struct yy_buffer_state * YY_BUFFER_STATE;
-//extern YY_BUFFER_STATE yy_scan_string(char * str);
-//extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
 int yyparse();
 int yylex();
 void parse(char * string);
@@ -61,9 +58,15 @@ int main(int argc, char **argv) {
                 if (string) {
                     signal(SIGINT, sig_handler);
 
-                    if(read(0, string, 128) < 0)
+					int read_count = read(0, string, 128);
+                    if(read_count < 0) {
                          perror("read syscall");
+						 exit(errno);
+					}
 
+					else if (read_count == 0){
+						exit(0);
+				    }	
                     char * hist = check_history(string);
                     if (hist != NULL) {
                         if (strcmp(hist, string) != 0) {
@@ -77,10 +80,6 @@ int main(int argc, char **argv) {
                         print_msg(2, "No prev command.\n");
                         string = "\n";
                     }
-
-                    //YY_BUFFER_STATE buffer = yy_scan_string(string);
-                    //yyparse();
-                    //yy_delete_buffer(buffer);
 					parse(string);
                 }
                 else {
